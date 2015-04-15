@@ -1,10 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!--<link rel="shortcut icon" type="image/x-icon" href="icon.png">-->
-  <title>EHR Data Visualization</title>
-  <meta charset="utf-8">
+  	<!--<link rel="shortcut icon" type="image/x-icon" href="icon.png">-->
+  	<title>EHR Data Visualization</title>
+  	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<style type="text/css">
+	  
+	  .axis path,
+	  .axis line {
+	    fill: none;
+	    stroke: black;
+	    shape-rendering: crispEdges;
+	  }
+	  
+	  .axis text {
+	    font-family: sans-serif;
+	    font-size: 11px;
+	  }
+
+	</style>
 </head>
 <body>
-</body>
+    <script type="text/javascript">
+
+	//Width and height
+	var w = 1000;
+	var h = 600;
+	var padding = 60;
+
+
+	var dataset = []
+
+	d3.json("outpatient.json", function(error, json) {
+		if (error) return console.warn(error);
+		dataset = json;
+		var all_codes = d3.keys(dataset);
+
+		//console.log(dataset);
+		console.log(d3.keys(dataset));
+
+		//Create scale functions
+		var xScale = d3.scale.linear()
+		.domain([0, d3.max(all_codes, function(d) { return dataset[d]['unique_patients']; })])
+		.range([padding, w - padding * 2]);
+
+		var yScale = d3.scale.linear()
+		.domain([0, d3.max(all_codes, function(d) { return (dataset[d]['total_costs'] / dataset[d]['total_visits']); })])
+		.range([h - padding, padding]);
+
+
+		//Define X axis
+		var xAxis = d3.svg.axis()
+		.scale(xScale)
+		.orient("bottom")
+		.ticks(5);
+
+		//Define Y axis
+		var yAxis = d3.svg.axis()
+		.scale(yScale)
+		.orient("left")
+		.ticks(5);
+
+		//Create SVG element
+		var svg = d3.select("body")
+		.append("svg")
+		.attr("width", w)
+		.attr("height", h);
+
+		//Create circles
+		
+		all_codes.forEach(function(d){
+			//console.log(dataset[d]['total_visits']);
+
+			var group = svg.append("g")
+			.on("mouseover",nodehover)
+			.on("mouseout",nodehoverout);
+
+			group.append("circle")
+			.attr("cx", function() {
+				return xScale(dataset[d]['unique_patients']);
+			})
+			.attr("cy", function() {
+				return yScale(dataset[d]['total_costs'] / dataset[d]['total_visits']);
+			})
+			.attr("r", 3);
+
+			group.append("text")
+			.text(d)
+			.attr("x",function() {
+				return xScale(dataset[d]['unique_patients']);
+			})
+			.attr("y", function() {
+				return yScale(dataset[d]['total_costs'] / dataset[d]['total_visits']);
+			})
+			.style('opacity',0);
+		});
+		
+		/*
+		svg.selectAll("circle")
+		.data(dataset)
+		.enter()
+		.append("circle")
+		.attr("cx", function(d) {
+			return xScale(d.unique_patients);
+		})
+		.attr("cy", function(d) {
+			return yScale(d.total_costs / d.total_visits);
+		})
+		.attr("r", 3);
+		*/
+
+		//Create X axis
+		svg.append("g")
+		.attr("class", "axis")
+		.attr("transform", "translate(0," + (h - padding) + ")")
+		.call(xAxis);
+
+		//Create Y axis
+		svg.append("g")
+		.attr("class", "axis")
+		.attr("transform", "translate(" + padding + ",0)")
+		.call(yAxis);
+
+		// d3.select("svg").append("text").attr("x",400).attr("y",400).text("WORLD");
+		svg.append("text")
+		.attr("x", w/2)
+		.attr("y", h-10)
+		// .text("frequency (% of patients)")
+		.text("unique patients with diagnosis")
+		;
+
+		svg.append("text")
+		.attr("transform", "rotate(-90)")
+		.attr("y",0)
+		.attr("x",0-(h/2))
+		.attr("dy", "1em")
+		.style("text-anchor", "middle")
+		.text("avg cost ($)");
+	});
+
+	function nodehover(){
+		d3.select(this).select('text').style('opacity',1);
+	}
+
+	function nodehoverout(){
+		d3.select(this).select('text').style('opacity',0);
+	}
+
+    </script>
+  </body>
 </html>
