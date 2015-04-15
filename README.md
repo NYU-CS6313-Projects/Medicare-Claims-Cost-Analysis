@@ -1,4 +1,4 @@
-# Project X
+EHR Data Visualization - NYU CS6313 - Group 008
 
 TODO describe project here
 
