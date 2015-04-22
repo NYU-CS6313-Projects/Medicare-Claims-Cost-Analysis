@@ -67,6 +67,10 @@ def parsePatientFiles(li, dictionary):
 						summary[diag]["osteo"] = 0 	
 						summary[diag]["arthritis"] = 0 
 						summary[diag]["stroke"] = 0 	
+						summary[diag]["total_visits"] = 1
+						summary[diag]["uniques"] = []
+						summary[diag]["uniques"].append(visit[patIndex])	
+						#print summary[diag]["uniques"]
 
 						for i, illness in enumerate(dictionary[visit[patIndex]]):
 							if illness == '1.0': 
@@ -77,6 +81,11 @@ def parsePatientFiles(li, dictionary):
 								pass  
 								
 					else:
+						summary[diag]["total_visits"] += 1
+						
+						summary[diag]["uniques"].append(visit[patIndex])
+						#print summary[diag]["uniques"]				
+	
 						for i, illness in enumerate(dictionary[visit[patIndex]]):
                                                         if illness == '1.0':
                                                                 summary[diag][all_chronic[i]] += 1
@@ -84,14 +93,17 @@ def parsePatientFiles(li, dictionary):
                                                                 pass
                                                         else:
                                                                 pass
-					
-					#print diag, summary[diag]	
 					index += 1 	
-		
+				#	print diag, summary[diag] 
+	cnt = 0 
+	for diagnosis in summary.items():
+		print cnt 
+		cnt += 1 
+		summary[diagnosis[0]]["uniques"] = len(set(summary[diagnosis[0]]["uniques"]))
+
+	print summary
 	print datetime.now() - startTime									
 	
-					#print dictionary[visit[patIndex]]
-					#index += 1   
 
 
 if __name__=='__main__':
