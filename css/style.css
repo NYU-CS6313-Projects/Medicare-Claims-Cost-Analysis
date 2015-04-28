@@ -1,0 +1,39 @@
+.axis path,
+.axis line {
+fill: none;
+stroke: black;
+shape-rendering: crispEdges;
+}
+
+.axis text {
+font-family: sans-serif;
+font-size: 11px;
+}
+
+.btn{
+	width:100%;
+}
+
+.btn:hover{
+	color:#fff;
+	background:#000;
+}
+
+.filters {
+	position:absolute;
+	top:20px;
+	right:20px;
+	border: 1px solid #000;
+	border-radius:5px;
+}
+
+.filtercontent{
+	max-height:400px;
+	overflow-y:scroll;
+	padding:10px;
+}
+
+.nodeinfo{
+	position:relative;
+	padding:10px;
+}
