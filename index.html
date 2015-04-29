@@ -55,7 +55,7 @@
 
 	var dataset = []
 
-	d3.json("old_files/outpatient.json", function(error, json) {
+	d3.json("data/outpatient.json", function(error, json) {
 		if (error){ return console.warn(error); }
 
 		d3.json("data/CHRONoutpatient.json", function(chronerror,chronjson) {
@@ -65,10 +65,10 @@
 		dataset = json;
 		var all_codes = d3.keys(dataset);
 		//var color = {"sel":"#0aa2bd", "else":"#ffd800"};
-		var color = {"sel":"#000", "else":"#ffd800"};
+		var color = ['rgb(255,255,229)','rgb(255,247,188)','rgb(254,227,145)','rgb(254,196,79)','rgb(254,153,41)','rgb(236,112,20)','rgb(204,76,2)','rgb(153,52,4)','rgb(102,37,6)'];
 
 		//console.log(all_codes);
-		//console.log(dataset);
+		console.log(dataset);
 		console.log(chronicdata);
 
 		//Create glyph scale functions
@@ -124,6 +124,55 @@
 
 		//Create circles
 		all_codes.forEach(function(d){
+			//HARD FILTERS
+			if(dataset[d]['unique_patients']/dataset[d]['overall_uniques'] > 0.000001){
+				//LOAD FILTERS
+				$('#diagcontent').append('<input type="checkbox" name="' + d + '" checked>' + d + '<br>');
+
+				var code = d;
+
+				var chronicKeys = d3.keys(chronicdata[code]);
+				var glyphdata = [{"label":"sel", "value":0},{"label":"else","value":0}];
+
+				var selectedChronics = ['ischemicHeart']; //DYMANIC CHRONIC ILLNESS SELECT
+
+				chronicKeys.forEach(function(cd){
+					if(cd != "uniques" && cd != "total_visits"){
+						if(selectedChronics.indexOf(cd) != -1){
+							glyphdata[0]['value'] += chronicdata[code][cd]
+						}else{
+							glyphdata[1]['value'] += chronicdata[code][cd]
+						}
+					}
+				});
+
+				if(!(glyphdata[0]['value'] == 0 && glyphdata[1]['value'] == 0)){
+
+					var distrib = (glyphdata[0]['value'] / (glyphdata[0]['value'] + glyphdata[1]['value']));
+
+					var colorsect = color[Math.round(distrib * 8)];
+
+					var nodegroup = svg.append("g")
+						.on("click",nodeclick);
+
+					nodegroup.append("circle")
+					.attr("cx",function(){
+						return xScale(dataset[d]['unique_patients']/dataset[d]['overall_uniques'])
+					})
+					.attr("cy",function(){
+						return yScale(dataset[d]['total_costs'] / dataset[d]['total_visits']);
+					})
+					.attr("r",radius)
+					.style("fill",colorsect);
+
+					nodegroup.append("text")
+					.html("Diagnosis: " + code + "<br />Frequency: " + dataset[code]['unique_patients']/dataset[code]['overall_uniques'] + "<br />Cost: $" + dataset[code]['total_costs'] / dataset[code]['total_visits'])
+					.attr("x", 20)
+					.attr("y", 20)
+					.style('display','none');
+				}
+			}
+			/*
 			//HARD FILTERS
 			if(dataset[d]['unique_patients']/dataset[d]['overall_uniques'] > 0.00001){
 				//LOAD FILTERS
@@ -189,6 +238,7 @@
 					//.style("stroke-width","2");
 				}
 			}
+			*/
 		});
 		
 
@@ -205,11 +255,13 @@
 		.call(yAxis);
 
 		svg.append("text")
+		.classed("axistext",true)
 		.attr("x", w/2)
 		.attr("y", h-10)
 		.text("Frequency");
 
 		svg.append("text")
+		.classed("axistext",true)
 		.attr("transform", "rotate(-90)")
 		.attr("y",0)
 		.attr("x",-(h/2))
@@ -225,29 +277,41 @@
 	});
 
 	function nodeclick(){
-		var arc = d3.select(this);
+		var group = d3.select(this);
 
-		if(arc.classed('selected')){
-			arc.select('text').style('opacity',0);
+		if(group.classed('selected')){
+			group.select('text').style('opacity',0);
 
+			var circle = group.select('circle');
+
+			circle.attr("r",6).style("stroke","#fff");
+
+			group.classed('selected',false);
+
+			/*
 			var arcOver = d3.svg.arc()
 			    .outerRadius(radius)
 			    .innerRadius(0);
-
-			arc.classed('selected',false);
 
 			arc.selectAll("path").transition()
 				.duration(500)
 				.attr("d", arcOver)
 				.style("opacity","0.8");
+			*/
 		}else{
-			var text = arc.select('text').html();
+			var text = group.select('text').html();
 
+			group.classed('selected', true);
+
+			var circle = group.select('circle');
+
+			circle.attr("r",24)
+			.style("stroke","#000");
+
+			/*
 			var arcOver = d3.svg.arc()
 		        .outerRadius(4*radius)
 		        .innerRadius(0);
-
-		    arc.classed('selected', true);
 
 			var value = arc.attr("value");
 
@@ -255,6 +319,7 @@
 				.duration(500)
 				.attr("d", arcOver)
 				.style("opacity","1");
+			*/
 
 			var nodeinfo = d3.select(".nodeinfo");
 

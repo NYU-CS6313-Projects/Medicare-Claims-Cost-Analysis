@@ -1,29 +1,42 @@
-.axis path,
-.axis line {
-fill: none;
-stroke: black;
-shape-rendering: crispEdges;
+body{
+	background:#000;
+	font-family: 'Helvetica', sans-serif;
 }
 
-.axis text {
-font-family: sans-serif;
-font-size: 11px;
+.axis path,
+.axis line {
+	fill: none;
+	stroke: #fff;
+	shape-rendering: crispEdges;
+}
+
+.tick text{
+	font-family: 'Helvetica', sans-serif;
+	font-size: 11px;
+	fill:#fff;
+}
+
+.axistext {
+	font-family: 'Helvetica', sans-serif;
+	font-size: 11px;
+	fill:#fff;
 }
 
 .btn{
+	color:#fff;
 	width:100%;
 }
 
 .btn:hover{
-	color:#fff;
-	background:#000;
+	color:#000;
+	background:#fff;
 }
 
 .filters {
 	position:absolute;
 	top:20px;
 	right:20px;
-	border: 1px solid #000;
+	border: 1px solid #fff;
 	border-radius:5px;
 }
 
@@ -34,6 +47,7 @@ font-size: 11px;
 }
 
 .nodeinfo{
+	color:#fff;
 	position:relative;
 	padding:10px;
 }
