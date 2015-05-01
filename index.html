@@ -17,7 +17,7 @@
 				<input type="checkbox" name="cancer" /> cancer <br/>
 				<input type="checkbox" name="COPD" /> COPD <br/>
 				<input type="checkbox" name="osteo" /> osteo <br/>
-				<input type="checkbox" name="ischemicHeart" checked/> ischemicHeart <br/>
+				<input type="checkbox" name="ischemicHeart"/> ischemicHeart <br/>
 				<input type="checkbox" name="arthritis" /> arthritis <br/>
 				<input type="checkbox" name="heartFailure" /> heartFailure <br/>
 				<input type="checkbox" name="alzheimers" /> alzheimers <br/>
@@ -55,225 +55,243 @@
 
 	var dataset = []
 
+	var color = ['rgb(255,255,229)','rgb(255,247,188)','rgb(254,227,145)','rgb(254,196,79)','rgb(254,153,41)','rgb(236,112,20)','rgb(204,76,2)','rgb(153,52,4)','rgb(102,37,6)'];
+
+	var chronicdata = [];
+	var diagdata = [];
+
 	d3.json("data/outpatient.json", function(error, json) {
 		if (error){ return console.warn(error); }
 
 		d3.json("data/CHRONoutpatient.json", function(chronerror,chronjson) {
-		if (chronerror){ return console.warn(error); }
+			if (chronerror){ return console.warn(error); }
 
-		chronicdata = chronjson;
-		dataset = json;
-		var all_codes = d3.keys(dataset);
-		//var color = {"sel":"#0aa2bd", "else":"#ffd800"};
-		var color = ['rgb(255,255,229)','rgb(255,247,188)','rgb(254,227,145)','rgb(254,196,79)','rgb(254,153,41)','rgb(236,112,20)','rgb(204,76,2)','rgb(153,52,4)','rgb(102,37,6)'];
+			chronicdata = chronjson;
+			var dataset = json;
 
-		//console.log(all_codes);
-		console.log(dataset);
-		console.log(chronicdata);
+			console.log("outpatient count = " + d3.keys(dataset).length)
+			console.log("CHRONoutpatient count = " + d3.keys(chronicdata).length)
 
-		//Create glyph scale functions
-		var x = d3.scale.linear()
-		    .range([0, 2 * Math.PI]);
+			diagdata = dataset;
 
-		var y = d3.scale.sqrt()
-		    .range([0, radius]);
+			var all_codes = d3.keys(dataset);
 
-		var arc = d3.svg.arc()
-		    .outerRadius(radius)
-		    .innerRadius(0);
+			//console.log(all_codes);
+			//console.log(dataset);
+			//console.log(chronicdata);
 
-		var pie = d3.layout.pie()
-		    .sort(null)
-		    .value(function(d){return d.value;});
+			var max_x = d3.max(all_codes, function(d) { return dataset[d]['unique_patients'] / dataset[d]['overall_uniques']; });
+			var max_y = d3.max(all_codes, function(d) { return (dataset[d]['total_costs'] / dataset[d]['total_visits']); });
 
-		//Create scale functions
-		var xScale = d3.scale.pow().exponent(0.3)
-		.domain([0, d3.max(all_codes, function(d) { return dataset[d]['unique_patients']/dataset[d]['overall_uniques']; })])
-		.range([padding, w - padding * 2]);
+			//Create glyph scale functions
+			/*
+			var x = d3.scale.linear()
+			    .range([0, 2 * Math.PI]);
 
-		var yScale = d3.scale.pow().exponent(0.6)
-		.domain([0, d3.max(all_codes, function(d) { return (dataset[d]['total_costs'] / dataset[d]['total_visits']); })])
-		.range([h - padding, padding]);
+			var y = d3.scale.sqrt()
+			    .range([0, radius]);
 
-		//Define X axis
-		var xAxis = d3.svg.axis()
-		.scale(xScale)
-		.orient("bottom")
-		.ticks(5);
+			var arc = d3.svg.arc()
+			    .outerRadius(radius)
+			    .innerRadius(0);
 
-		//Define Y axis
-		var yAxis = d3.svg.axis()
-		.scale(yScale)
-		.orient("left")
-		.ticks(5);
+			var pie = d3.layout.pie()
+			    .sort(null)
+			    .value(function(d){return d.value;});
+			*/
 
-		var zoom = d3.behavior.zoom()
-		.x(xScale)
-		.y(yScale)
-		.scaleExtent([1, 4])
-		.on("zoom", zoomed);
+			//Create scale functions
+			var xScale = d3.scale.pow().exponent(0.3)
+			.domain([0, max_x])
+			.range([padding, w - padding * 2]);
 
-		//Create SVG element
-		var svg = d3.select(".graphwrap")
-		.append("svg")
-		.attr("width", w)
-		.attr("height", h)
-		.append("g")
-			.attr("transform","translate(" + m.left + "," + m.top + ")")
-			.call(zoom);
+			var yScale = d3.scale.pow().exponent(0.6)
+			.domain([0, max_y])
+			.range([h - padding, padding]);
 
-		//Create circles
-		all_codes.forEach(function(d){
-			//HARD FILTERS
-			if(dataset[d]['unique_patients']/dataset[d]['overall_uniques'] > 0.000001){
-				//LOAD FILTERS
-				$('#diagcontent').append('<input type="checkbox" name="' + d + '" checked>' + d + '<br>');
+			//Define X axis
+			var xAxis = d3.svg.axis()
+			.scale(xScale)
+			.orient("bottom")
+			.ticks(5);
 
-				var code = d;
+			//Define Y axis
+			var yAxis = d3.svg.axis()
+			.scale(yScale)
+			.orient("left")
+			.ticks(5);
 
-				var chronicKeys = d3.keys(chronicdata[code]);
-				var glyphdata = [{"label":"sel", "value":0},{"label":"else","value":0}];
+			//Create SVG element
+			var svg = d3.select(".graphwrap")
+			.append("svg")
+			.attr("width", w)
+			.attr("height", h)
+			.call(d3.behavior.zoom().x(xScale).y(yScale).scaleExtent([1, 30]).on("zoom", zoom));
 
-				var selectedChronics = ['ischemicHeart']; //DYMANIC CHRONIC ILLNESS SELECT
+			//Create circles
+			all_codes.forEach(function(d){
+				//HARD FILTERS
+				if(dataset[d]['unique_patients']/dataset[d]['overall_uniques'] > 0.000001){
+					//LOAD FILTERS
+					$('#diagcontent').append('<input type="checkbox" name="' + d + '" checked>' + d + '<br>');
 
-				chronicKeys.forEach(function(cd){
-					if(cd != "uniques" && cd != "total_visits"){
-						if(selectedChronics.indexOf(cd) != -1){
-							glyphdata[0]['value'] += chronicdata[code][cd]
-						}else{
-							glyphdata[1]['value'] += chronicdata[code][cd]
+					var code = d;
+
+					/*
+					var chronicKeys = d3.keys(chronicdata[code]);
+					var glyphdata = [{"label":"sel", "value":0},{"label":"else","value":0}];
+
+					chronicKeys.forEach(function(cd){
+						if(cd != "uniques" && cd != "total_visits"){
+							if(selectedChronics.indexOf(cd) != -1){
+								glyphdata[0]['value'] += chronicdata[code][cd]
+							}else{
+								glyphdata[1]['value'] += chronicdata[code][cd]
+							}
 						}
+					});
+
+					if(!(glyphdata[0]['value'] == 0 && glyphdata[1]['value'] == 0)){
+					*/
+
+						//var distrib = (glyphdata[0]['value'] / (glyphdata[0]['value'] + glyphdata[1]['value']));
+
+						//var colorsect = color[Math.round(distrib * 8)];
+
+						var nodegroup = svg.append("g").classed("nodegroup",true)
+							.on("click",nodeclick);
+
+						nodegroup.append("circle")
+						.attr("icd9",d)
+						.attr("cx",function(){
+							return xScale(dataset[d]['unique_patients']/dataset[d]['overall_uniques'])
+						})
+						.attr("cy",function(){
+							return yScale(dataset[d]['total_costs'] / dataset[d]['total_visits']);
+						})
+						.attr("r",radius)
+						.style("fill",color[4])
+						.style("stroke",'#fff');
+
+						nodegroup.append("text")
+						.html("Diagnosis: " + code + "<br />Frequency: " + dataset[code]['unique_patients']/dataset[code]['overall_uniques'] + "<br />Cost: $" + dataset[code]['total_costs'] / dataset[code]['total_visits'])
+						.attr("x", 20)
+						.attr("y", 20)
+						.style('display','none');
+					//}
+				}
+				/*
+				//HARD FILTERS
+				if(dataset[d]['unique_patients']/dataset[d]['overall_uniques'] > 0.00001){
+					//LOAD FILTERS
+					$('#diagcontent').append('<input type="checkbox" name="' + d + '" checked>' + d + '<br>');
+
+					if(dataset[d]['total_costs'] / dataset[d]['total_visits'] < 0){
+						console.log(d);
+						console.log(dataset[d]);
 					}
-				});
 
-				if(!(glyphdata[0]['value'] == 0 && glyphdata[1]['value'] == 0)){
+					var code = d;
+					var glyphdata = [{"label":"sel", "value":0},{"label":"else","value":0}];
 
-					var distrib = (glyphdata[0]['value'] / (glyphdata[0]['value'] + glyphdata[1]['value']));
+					var selectedChronics = ['ischemicHeart']; //DYMANIC CHRONIC ILLNESS SELECT
 
-					var colorsect = color[Math.round(distrib * 8)];
+					var chronicKeys = d3.keys(chronicdata[code]);
 
-					var nodegroup = svg.append("g")
+					chronicKeys.forEach(function(cd){
+						if(cd != "uniques" && cd != "total_visits"){
+							if(selectedChronics.indexOf(cd) != -1){
+								glyphdata[0]['value'] += chronicdata[code][cd]
+							}else{
+								glyphdata[1]['value'] += chronicdata[code][cd]
+							}
+						}
+					});
+
+					if(!(glyphdata[0]['value'] == 0 && glyphdata[1]['value'] == 0)){
+
+						var xtrans =  xScale(dataset[code]['unique_patients']/dataset[code]['overall_uniques']);
+
+						var ytrans = yScale(dataset[code]['total_costs'] / dataset[code]['total_visits']);
+
+						var glyphgroup = svg.append("g")
+						    .attr("transform", "translate(" + xtrans + "," + ytrans + ")")
 						.on("click",nodeclick);
 
-					nodegroup.append("circle")
-					.attr("cx",function(){
-						return xScale(dataset[d]['unique_patients']/dataset[d]['overall_uniques'])
-					})
-					.attr("cy",function(){
-						return yScale(dataset[d]['total_costs'] / dataset[d]['total_visits']);
-					})
-					.attr("r",radius)
-					.style("fill",colorsect);
+						
+						glyphgroup.append("text")
+						.html("Diagnosis: " + code + "<br />Frequency: " + dataset[code]['unique_patients']/dataset[code]['overall_uniques'] + "<br />Cost: $" + dataset[code]['total_costs'] / dataset[code]['total_visits'])
+						.attr("x", 20)
+						.attr("y", 20)
+						.style('display','none');
+						
 
-					nodegroup.append("text")
-					.html("Diagnosis: " + code + "<br />Frequency: " + dataset[code]['unique_patients']/dataset[code]['overall_uniques'] + "<br />Cost: $" + dataset[code]['total_costs'] / dataset[code]['total_visits'])
-					.attr("x", 20)
-					.attr("y", 20)
-					.style('display','none');
-				}
-			}
-			/*
-			//HARD FILTERS
-			if(dataset[d]['unique_patients']/dataset[d]['overall_uniques'] > 0.00001){
-				//LOAD FILTERS
-				$('#diagcontent').append('<input type="checkbox" name="' + d + '" checked>' + d + '<br>');
+						var glyph = glyphgroup.selectAll(".arc")
+						.data(pie(glyphdata))
+						.enter().append("g")
+						.attr("class",function(e){ return e.data.label + " slice"})
+						.attr("value",function(e){ return e.data.value})
+						.style("cursor","pointer")
+						.style("opacity","0.8");
 
-				if(dataset[d]['total_costs'] / dataset[d]['total_visits'] < 0){
-					console.log(d);
-					console.log(dataset[d]);
-				}
-
-				var code = d;
-				var glyphdata = [{"label":"sel", "value":0},{"label":"else","value":0}];
-
-				var selectedChronics = ['ischemicHeart']; //DYMANIC CHRONIC ILLNESS SELECT
-
-				var chronicKeys = d3.keys(chronicdata[code]);
-
-				chronicKeys.forEach(function(cd){
-					if(cd != "uniques" && cd != "total_visits"){
-						if(selectedChronics.indexOf(cd) != -1){
-							glyphdata[0]['value'] += chronicdata[code][cd]
-						}else{
-							glyphdata[1]['value'] += chronicdata[code][cd]
-						}
+						var path = glyph.append("path")
+						.attr('x','0')
+						.attr('y','0')
+						.attr('width','100%')
+						.attr('height','100%')
+						.attr("d", arc)
+						.style("fill", function(d){ return color[d.data.label]; })
+						//.style("fill","url(#diagonal)")
+						.style("stroke","#fff")
+						//.style("stroke-width","2");
 					}
-				});
-
-				if(!(glyphdata[0]['value'] == 0 && glyphdata[1]['value'] == 0)){
-
-					var xtrans =  xScale(dataset[code]['unique_patients']/dataset[code]['overall_uniques']);
-
-					var ytrans = yScale(dataset[code]['total_costs'] / dataset[code]['total_visits']);
-
-					var glyphgroup = svg.append("g")
-					    .attr("transform", "translate(" + xtrans + "," + ytrans + ")")
-					.on("click",nodeclick);
-
-					
-					glyphgroup.append("text")
-					.html("Diagnosis: " + code + "<br />Frequency: " + dataset[code]['unique_patients']/dataset[code]['overall_uniques'] + "<br />Cost: $" + dataset[code]['total_costs'] / dataset[code]['total_visits'])
-					.attr("x", 20)
-					.attr("y", 20)
-					.style('display','none');
-					
-
-					var glyph = glyphgroup.selectAll(".arc")
-					.data(pie(glyphdata))
-					.enter().append("g")
-					.attr("class",function(e){ return e.data.label + " slice"})
-					.attr("value",function(e){ return e.data.value})
-					.style("cursor","pointer")
-					.style("opacity","0.8");
-
-					var path = glyph.append("path")
-					.attr('x','0')
-					.attr('y','0')
-					.attr('width','100%')
-					.attr('height','100%')
-					.attr("d", arc)
-					.style("fill", function(d){ return color[d.data.label]; })
-					//.style("fill","url(#diagonal)")
-					.style("stroke","#fff")
-					//.style("stroke-width","2");
 				}
+				*/
+			});
+
+			//Create X axis
+			svg.append("g")
+			.attr("class", "x axis")
+			.attr("transform", "translate(0," + (h - padding) + ")")
+			.call(xAxis);
+
+			//Create Y axis
+			svg.append("g")
+			.attr("class", "y axis")
+			.attr("transform", "translate(" + padding + ",0)")
+			.call(yAxis);
+
+			svg.append("text")
+			.classed("axistext",true)
+			.attr("x", w/2)
+			.attr("y", h-10)
+			.text("Frequency");
+
+			svg.append("text")
+			.classed("axistext",true)
+			.attr("transform", "rotate(-90)")
+			.attr("y",0)
+			.attr("x",-(h/2))
+			.attr("dy", "1em")
+			.style("text-anchor", "middle")
+			.text("Average Cost ($)");
+
+
+			function zoom() {
+				svg.select(".x.axis").call(xAxis);
+	  			svg.select(".y.axis").call(yAxis);
+
+	  			svg.selectAll("circle")
+				.attr("cx", function() {
+					code = d3.select(this).attr("icd9");
+					return xScale(dataset[code]['unique_patients']/dataset[code]['overall_uniques']);
+				})
+				.attr("cy", function(){
+					code = d3.select(this).attr("icd9");
+					return yScale(dataset[code]['total_costs'] / dataset[code]['total_visits']);
+				});
 			}
-			*/
 		});
-		
-
-		//Create X axis
-		svg.append("g")
-		.attr("class", "x axis")
-		.attr("transform", "translate(0," + (h - padding) + ")")
-		.call(xAxis);
-
-		//Create Y axis
-		svg.append("g")
-		.attr("class", "y axis")
-		.attr("transform", "translate(" + padding + ",0)")
-		.call(yAxis);
-
-		svg.append("text")
-		.classed("axistext",true)
-		.attr("x", w/2)
-		.attr("y", h-10)
-		.text("Frequency");
-
-		svg.append("text")
-		.classed("axistext",true)
-		.attr("transform", "rotate(-90)")
-		.attr("y",0)
-		.attr("x",-(h/2))
-		.attr("dy", "1em")
-		.style("text-anchor", "middle")
-		.text("Average Cost ($)");
-		});
-
-		function zoomed() {
-			d3.select(".x.axis").call(xAxis);
-  			d3.select(".y.axis").call(yAxis);
-		}
 	});
 
 	function nodeclick(){
@@ -284,7 +302,7 @@
 
 			var circle = group.select('circle');
 
-			circle.attr("r",6).style("stroke","#fff");
+			circle.attr("r",6);
 
 			group.classed('selected',false);
 
@@ -305,8 +323,7 @@
 
 			var circle = group.select('circle');
 
-			circle.attr("r",24)
-			.style("stroke","#000");
+			circle.attr("r",24);
 
 			/*
 			var arcOver = d3.svg.arc()
@@ -327,6 +344,44 @@
 		}
 	}
 
+	function loadColors(selectedChronics){
+		console.log("loadcolors");
+		console.log(chronicdata);
+
+		d3.select("svg").selectAll("circle")
+		.style("fill", function(){
+			d3.select(this).style("display","");
+
+			code = d3.select(this).attr("icd9");
+			var chronicKeys = d3.keys(chronicdata[code]);
+			var glyphdata = [{"label":"sel", "value":0},{"label":"else","value":0}];
+
+			chronicKeys.forEach(function(cd){
+				if(cd != "uniques" && cd != "total_visits"){
+					if(selectedChronics.indexOf(cd) != -1){
+						glyphdata[0]['value'] += chronicdata[code][cd]
+					}else{
+						glyphdata[1]['value'] += chronicdata[code][cd]
+					}
+				}
+			});
+
+			if(glyphdata[0]['value'] != 0){
+				var distrib = (glyphdata[0]['value'] / (glyphdata[0]['value'] + glyphdata[1]['value']));
+
+				var colorsect = color[Math.round(distrib * 8)];	
+				
+				return colorsect;			
+			}else{
+				d3.select(this).style("display","none");
+				//console.log(code);
+				//console.log(chronicdata[code]);
+				//console.log(diagdata[code]);
+				//return color[0];
+			}
+		});
+	}
+
   	$(document).ready(function(){
 		$('#chroncontent').slideUp(0);
 		$('#diagcontent').slideUp(0);
@@ -340,6 +395,19 @@
 	$(document).on("click","#diagnosisbtn",function(){
 		$("#diagcontent").slideToggle();
 	});
+
+	$(document).on("change","#chroncontent input",function(){
+		var selectedChronics = [];
+		$("#chroncontent input").each(function(c){
+			var c = $(this);
+			//console.log($(this).attr('name'));
+			if(c.prop( "checked" )){
+				selectedChronics.push(c.attr("name"));
+			}
+		});
+
+		loadColors(selectedChronics);
+	})
     </script>
   </body>
 </html>

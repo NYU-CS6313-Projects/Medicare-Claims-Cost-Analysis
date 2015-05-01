@@ -1,6 +1,7 @@
 body{
 	background:#000;
 	font-family: 'Helvetica', sans-serif;
+	color:#fff;
 }
 
 .axis path,
@@ -38,6 +39,7 @@ body{
 	right:20px;
 	border: 1px solid #fff;
 	border-radius:5px;
+	background:rgba(0,0,0,0.8);
 }
 
 .filtercontent{
