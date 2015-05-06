@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Patient Cost Histogram</title>
+    <!-- <script src="http://d3js.org/d3.v3.min.js"></script> -->
+    <script type="text/javascript" src="../d3/d3.v3.js"></script>
+    <style>
+
+    .bar {
+      fill: steelblue;
+    }
+
+    .bar:hover {
+      fill: limegreen;
+    }
+
+    .axis {
+      font: 10px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    .x.axis path {
+      display: none;
+    }
+
+    </style>
+  </head>
+  <body>
+    <!-- <div id="slider"></div> -->
+
+    <p>Volume</p>
+    <input id="volume" type="range" min="0" max="100" step="1" value="50"/>
+
+    <script>
+
+    document.getElementById('volume').addEventListener('change', function() {
+      var curr_volume = this.value;
+      console.log("curr_volume ", curr_volume);
+      // now do something with curr_volume
+    });
+
+    // ("#slider").slider();
+
+    var margin = {top: 20, right: 20, bottom: 30, left: 50},
+        width = 1300 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+    var x = d3.scale.ordinal()
+        .rangeRoundBands([0, width], .1);
+
+    var y = d3.scale.linear()
+        .range([height, 0]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left")
+        // .ticks(10, "%");
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    d3.json("costHist.json", function(error, json){
+      // json.forEach(function(d) {data[d]["length"] =+ data[d]["length"];})
+      if(error){return console.warn(error);}
+      else {console.log(json);}
+
+      var data = json;
+      var dataKeys = d3.keys(data);
+      // var data = json.bins;
+      // console.log(Object.keys(data));
+      // console.log(data);
+
+      // data.forEach(function (d) {data[d]["length"] =+ data[d]["length"];});
+
+      x.domain(dataKeys.map(function(d) {return data[d]["floor"];}));
+      // x.domain(d3.keys(data));
+      // x.domain(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+      y.domain([0,d3.max(dataKeys, function(d) {return data[d]["length"];})]);
+
+      svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis);
+
+      svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+        .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end")
+          .text("Count of Patients");
+
+      svg.selectAll(".bar")
+          .data(dataKeys)
+        .enter().append("rect")
+          .attr("class", "bar")
+          .attr("x", function(d) { return x(data[d]["floor"])+10; })
+          .attr("width", x.rangeBand())
+          .attr("y", function(d) { return y(data[d]["length"]); })
+          .attr("height", function(d) { return height - y(data[d]["length"]); });
+
+    });
+
+
+    </script>
+  </body>
+</html>

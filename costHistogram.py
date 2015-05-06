@@ -20,7 +20,7 @@ def readBenSum(file):
       outpatientCost = float(patient[outpatientCostIndex])
       carrierCost = float(patient[carrierCostIndex])
       totalCost = inpatientCost + outpatientCost + carrierCost
-      if totalCost >= 0:
+      if totalCost >= minCost:
         patientCosts[patID] = totalCost
 
   return (patientCosts)
@@ -29,13 +29,13 @@ def makeHistogram(ptCosts):
   top = max(ptCostList.values())
   bottom = min(ptCostList.values())
   theRange = top-bottom
-  numBins = 10
+  numBins = 20
   binWidth = int(theRange/numBins)
 
   histDict = {}
   for i in range(numBins):
-    binFloor = i*binWidth
-    binCeiling = (i+1)*binWidth
+    binFloor = i*binWidth+minCost
+    binCeiling = (i+1)*binWidth+minCost
     tempIDs = []
     for pt in ptCostList:
         tempCost = ptCostList[pt]
@@ -57,6 +57,7 @@ def jsonDump(dict, writeFile):
 
 
 if __name__=='__main__':
+  minCost = 0
 
   benSumFile = "DE1_0_2008_Beneficiary_Summary_File_Sample_1.csv"
   jsonWriteFile = "costHist.json"
