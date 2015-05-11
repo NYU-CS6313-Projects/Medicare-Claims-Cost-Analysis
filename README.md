@@ -1,8 +1,11 @@
-EHR Data Visualization - NYU CS6313 - Group 008
+Medicare Claims Analysis
 
-TODO describe project here
+Using the following [Medicare Data](http://www.cms.gov/Research-Statistics-Data-and-Systems/Downloadable-Public-Use-Files/SynPUFs/DE_Syn_PUF.html), this project seeks to build a comprehensive, exploratory and visually engaging analytical tool in order to help health professionals find and analyze trends in Medicare claim costs.
+
+Current views include the following:
+* index.html (main page) - Overall view of ICD9 Diagnosis, grouped by Level 1 CCS codes for inpatient/outpatient data
+* l2_analysis.html - View of Level 2 CCS Diagnosis for inpatient/outpatient data. Will later include ability to drill down to ICD9 Level for each Level 2 CCS Diagnosis.
+* proc_diag.html - View of ICD9 Procedures, grouped by L2 CCS code (by color). User can drill into related ICD9 Diagnosis, and view the frequency of relation between selected ICD9 Procedure and Diagnosis. User is also able to view freuqency of selected Chronic Illnesses for each Procedure.
+* CostSlider5wHist.html - View of Patient distribution by cost, and Chronic Illness distibution for selected patient range.
 
 A live demo can be found [here](http://NYU-CS6313-Projects.github.io/sp2015-group8/index.html).
-
-You can use the `deploy.sh` script to keep the `gh-pages` branch up-to-date.
-When forking this project be sure to update the link to the demo page in this file.
