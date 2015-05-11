@@ -134,7 +134,7 @@
 						console.log(l2diagdata);
 						console.log(all_codes.length);
 
-						var max_x = d3.max(all_codes, function(d) { return l2diagdata[d]['uniques']/icd9_data['total_uniques']; });
+						var max_x = d3.max(all_codes, function(d) { return l2diagdata[d]['total_claims']/icd9_data['total_claims']; });
 						var max_y = d3.max(all_codes, function(d) { return l2diagdata[d]['total_cost']/l2diagdata[d]['total_claims']; });
 
 
