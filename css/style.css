@@ -11,6 +11,13 @@ body{
 	shape-rendering: crispEdges;
 }
 
+.axis_diag path,
+.axis_diag line {
+	fill: none;
+	stroke: #fff;
+	shape-rendering: crispEdges;
+}
+
 .tick text{
 	font-family: 'Helvetica', sans-serif;
 	font-size: 11px;
@@ -23,9 +30,68 @@ body{
 	fill:#fff;
 }
 
+/*
+.small_mult{
+	background: rgba(0,0,0,1);
+	width:auto;
+}
+
+.small_mult:hover{
+	background:rgba(255,255,255,0.1);
+}
+*/
+
+.header{
+	width:100%;
+	text-align:left;
+	font-size:18px;
+	color:#fff;
+	border-bottom:1px solid #fff;
+	padding:20px;
+}
+
+.header .typesel{
+	position:absolute;
+	right:20px;
+	top:22px;
+}
+
+.header .btn{
+	position:absolute;
+	right:145px;
+	top:16px;
+}
+
+.header .btn#chronbtn{
+	right:250px;
+}
+
+svg{
+	background: rgba(0,0,0,1);
+	width:auto;
+}
+
+svg:hover{
+	background:rgba(255,255,255,0.1);
+}
+
+.wrapper{
+	vertical-align:top;
+}
+
+.proc-wrap{
+	width:66%;
+	display:inline-block;
+}
+
+.diag-wrap{
+	width:33%;
+	display:inline-block;
+}
+
 .btn{
 	color:#fff;
-	width:100%;
+	background:#000;
 }
 
 .btn:hover{
@@ -33,23 +99,48 @@ body{
 	background:#fff;
 }
 
+.btn.selected{
+	color:#000;
+	background:#fff;	
+}
+
 .filters {
-	position:absolute;
+	position:fixed;
 	top:20px;
-	right:20px;
+	right:-180px;
 	border: 1px solid #fff;
-	border-radius:5px;
+	border-right:0px;
+	border-radius:5px 0px 0px 5px;
 	background:rgba(0,0,0,0.8);
+	width:200px;
+	transition: all 0.5s ease-in-out;
+}
+
+.filters:hover{
+	right:0px;
+	transition: all 0.5s ease-in-out;
 }
 
 .filtercontent{
+	position:absolute;
+	right:0px;
+	top:66px;
 	max-height:400px;
+	max-width:300px;
 	overflow-y:scroll;
 	padding:10px;
+	background:rgba(0,0,0,0.8);
+	z-index:999;
+	font-size:12px;
 }
 
 .nodeinfo{
 	color:#fff;
-	position:relative;
+	position:absolute;
+	top:85px;
+	right:40px;
+	width:200px;
+	height:auto;
 	padding:10px;
+	z-index:998;
 }
