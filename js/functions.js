@@ -2,6 +2,8 @@ function nodeclick(){
 	var group = d3.select(this);
 	var circle = group.select('circle');
 
+	var type = circle.attr("type");
+
 	//console.log(group);
 	//console.log(circle);
 
@@ -21,14 +23,21 @@ function nodeclick(){
 		circle.attr("r",3*radius);
 
 		var nodeinfo = d3.select(".nodeinfo");
+		var procinfo = d3.select(".procinfo");
 
-		nodeinfo.html(text);
+		if(type == "procedure"){
+			procinfo.html(text);
+		}else{
+			nodeinfo.html(text);
+		}
 	}
 }
 
 function nodehover(){
 	var group = d3.select(this);
 	var circle = group.select('circle');
+
+	var type = circle.attr("type");
 
 	//console.log(group);
 	//console.log(circle);
@@ -45,8 +54,13 @@ function nodehover(){
 		group.classed('selected', true);
 
 		var nodeinfo = d3.select(".nodeinfo");
+		var procinfo = d3.select(".procinfo");
 
-		nodeinfo.html(text);
+		if(type == "procedure"){
+			procinfo.html(text);
+		}else{
+			nodeinfo.html(text);
+		}
 	}	
 }
 

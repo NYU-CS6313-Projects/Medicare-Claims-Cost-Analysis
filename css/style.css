@@ -145,3 +145,14 @@ svg:hover{
 	padding:10px;
 	z-index:998;
 }
+
+.procinfo{
+	color:#fff;
+	position:absolute;
+	top:85px;
+	right:300px;
+	width:200px;
+	height:auto;
+	padding:10px;
+	z-index:998;	
+}
