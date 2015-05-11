@@ -90,6 +90,7 @@ svg:hover{
 }
 
 .btn{
+	border:1px solid #fff;
 	color:#fff;
 	background:#000;
 }

@@ -204,7 +204,7 @@
 							.on("click",load_corr_diag);
 
 							nodegroup.append("text")
-							.html("Procedure: " + proc_info[d]['l2label'] + "<br />Frequency: " + (dataset[d]['uniques']/dataset['total_uniques']).toFixed(6) + "<br />Cost: $" + (dataset[d]['total_cost'] / dataset[d]['total_claims']).toFixed(2) + "<br/>Total Claims: " + dataset[d]['total_claims'].toFixed(0) + "<br/>Total Cost: $" + dataset[d]['total_cost'].toFixed(2))
+							.html("Procedure: " + proc_info[d]['l2label'] + "<br />Frequency: " + (dataset[d]['uniques']/dataset['total_uniques']).toFixed(6) + "<br />Avg. Claim Cost: $" + (dataset[d]['total_cost'] / dataset[d]['total_claims']).toFixed(2) + "<br/>Total Claims: " + dataset[d]['total_claims'].toFixed(0) + "<br/>Total Cost: $" + dataset[d]['total_cost'].toFixed(2))
 							.attr("x", 20)
 							.attr("y", 20)
 							.style('display','none');
@@ -241,7 +241,7 @@
 					.attr("x",-(h/2))
 					.attr("dy", "1em")
 					.style("text-anchor", "middle")
-					.text("Average Cost ($)");
+					.text("Average Claim Cost ($)");
 
 					//Create diag scatter
 					var p_diag = {top:60,left:60,bottom:0,right:0},
@@ -306,7 +306,7 @@
 					.attr("x",-(h/4))
 					.attr("dy", "1em")
 					.style("text-anchor", "middle")
-					.text("Average Cost ($)");
+					.text("Average Claim Cost ($)");
 
 					function zoom() {
 						if(d3.select(this).attr("class") == "svg_diag"){
@@ -372,7 +372,7 @@
 									.style("stroke",'#c8c8c8');
 
 									nodegroup.append("text")
-									.html("Diagnosis: " + labelinfo['diagnosis'][d]['name'] + "<br />Frequency: " + (diag_nodes[d]['uniques']/diag_nodes['total_uniques']).toFixed(6) + "<br />Cost: $" + (diag_nodes[d]['total_cost'] / diag_nodes[d]['total_claims']).toFixed(2))
+									.html("Diagnosis: " + labelinfo['diagnosis'][d]['name'] + "<br />Frequency: " + (diag_nodes[d]['uniques']/diag_nodes['total_uniques']).toFixed(6) + "<br />Avg. Claim Cost: $" + (diag_nodes[d]['total_cost'] / diag_nodes[d]['total_claims']).toFixed(2))
 									.attr("x", 20)
 									.attr("y", 20)
 									.style('display','none');

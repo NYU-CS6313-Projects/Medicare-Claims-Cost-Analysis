@@ -162,6 +162,8 @@
 							var all_diag_cost = 0;
 							var all_diag_claims = 0;
 
+							var num_sm = 0;
+
 							//create small-mult
 							l1_codes.forEach(function(lc){
 							//lc = 1;
@@ -184,6 +186,30 @@
 										return l1_decode[lc];
 									}
 								});
+
+								small_mult.append("text")
+								.attr("text-anchor","end")
+								.attr("x",w-10)
+								.attr("y",60)
+								.attr("font-size","10")
+								.style("fill","rgb(230,230,230)")
+								.text("Avg. Freq.: " + (l1_info[lc]['total_claims']/dataset['total_claims']).toFixed(6))
+
+								small_mult.append("text")
+								.attr("text-anchor","end")
+								.attr("x",w-10)
+								.attr("y",75)
+								.attr("font-size","10")
+								.style("fill","rgb(230,230,230)")
+								.text("Total Claims: " + l1_info[lc]['total_claims'])
+
+								small_mult.append("text")
+								.attr("text-anchor","end")
+								.attr("x",w-10)
+								.attr("y",90)
+								.attr("font-size","10")
+								.style("fill","rgb(230,230,230)")
+								.text("Total Cost: $" + l1_info[lc]['total_cost'].toFixed(2))
 
 								var avg_cost = l1_info[lc]['total_cost']/l1_info[lc]['total_claims'];
 
@@ -275,6 +301,31 @@
 								.attr("class", "y axis")
 								.attr("transform", "translate(" + p.left + ",0)")
 								.call(yAxis);
+
+								if(num_sm==0){
+									small_mult.append("text")
+									.classed("axistext",true)
+									.attr("x", w/2)
+									.attr("y", h-10)
+									.text("Frequency");
+
+									small_mult.append("text")
+									.classed("axistext",true)
+									.attr("transform", "rotate(-90)")
+									.attr("y",50)
+									.attr("x",-50)
+									.attr("dy", "1em")
+									.style("text-anchor", "end")
+									.text("Average Claim Cost ($)");
+								}else{
+									small_mult.select('.x.axis').selectAll('.tick')
+									.select('text').remove();
+
+									small_mult.select('.y.axis').selectAll('.tick')
+									.select('text').remove();
+								}
+
+								num_sm++;
 							})
 							
 						var total_avg = all_diag_cost/all_diag_claims;
