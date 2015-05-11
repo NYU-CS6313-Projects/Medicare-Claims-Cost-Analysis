@@ -1,0 +1,531 @@
+<!--Key Python Files:-->
+<!--ptCostChronic.py-->
+<!--ptCostPercentiles.py-->
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<title>Patient Cost Slider</title>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<!-- <script type="text/javascript" src="../d3/d3.v3.js"></script> -->
+<style>
+
+.bar {
+  fill: #016c59;
+}
+
+.bar:hover {
+  fill: purple;
+}
+
+.axis {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+/*.x.axis path {
+  display: none;
+}
+*/
+svg {
+  font: 10px sans-serif;
+}
+
+.resize path {
+  fill: #016c59;
+  fill-opacity: .8;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.brush .extent {
+  fill: #016c59;
+  fill-opacity: .125;
+  shape-rendering: crispEdges;
+}
+
+.histogram-wrap{
+  display:inline-block;
+  width:49%;
+}
+
+.chronic-wrap{
+  display:inline-block;
+  width:49%;
+}
+
+#tooltip {
+  position: absolute;
+  width: 300px;
+  height: auto;
+  padding: 10px;
+  background-color: white;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+  -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+#tooltip.hidden {
+  display: none;
+}
+
+#tooltip p {
+  margin: 0;
+  font-family: sans-serif;
+  font-size: 16px;
+  line-height: 20px;
+}
+
+</style>
+<body>
+  <div class="histogram-wrap"></div>
+  <div class="chronic-wrap"></div>
+  <div class="slider-wrap"></div>
+  <div id="tooltip" class="hidden">
+<!--     <p><strong>Important Label Heading</strong></p> -->
+    <p><span id="value"></span></p>
+  </div>
+
+<script>
+var numBins = 10;
+
+//generate histogram
+var d = document,
+    g = d.getElementsByClassName('histogram-wrap')[0],
+    margin_hist = {top: 50, right: 40, bottom: 60, left: 40},
+    width_hist = g.clientWidth - margin_hist.left - margin_hist.right,
+    height_hist = 600 - margin_hist.top - margin_hist.bottom;
+
+var x_hist = d3.scale.ordinal()
+    .rangeRoundBands([0, width_hist], .1);
+
+var y_hist = d3.scale.linear()
+    .range([height_hist, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x_hist)
+    .orient("bottom")
+    .tickFormat(d3.format(",.0f"));
+
+var yAxis = d3.svg.axis()
+    .scale(y_hist)
+    .orient("left")
+    // .ticks(10, "%");
+
+var svg = d3.select(".histogram-wrap").append("svg")
+    .classed("hist",true)
+    .attr("width", width_hist + margin_hist.left + margin_hist.right)
+    .attr("height", height_hist + margin_hist.top + margin_hist.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin_hist.left + "," + margin_hist.top + ")");
+
+//histogram FUNCTIONS//
+
+function makeHist(json){
+  var svg = d3.select('.hist');
+ 
+  svg.selectAll('.bar')
+  .remove();
+
+  svg.selectAll('g')
+  .remove();
+
+  var data = json;
+  var dataKeys = d3.keys(data);
+
+  x_hist.domain(dataKeys.map(function(d) {return data[d]["floor"];}));
+  y_hist.domain([0,d3.max(dataKeys, function(d) {return data[d]["quant"];})]);
+  // y_hist.domain([0,numPatients]);
+  // y_hist.domain([0,allPatients.length]);
+
+  svg.selectAll(".bar")
+      .data(dataKeys)
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("x", function(d) { return x_hist(data[d]["floor"]); })
+      .attr("width", x_hist.rangeBand())
+      .attr("y", function(d) { return y_hist(data[d]["quant"]); })
+      .attr("height", function(d) { return height_hist - y_hist(data[d]["quant"]); })
+      .attr("transform","translate(" + (margin_hist.left + x_hist.rangeBand()/2 - 15) + "," + margin_hist.top + ")");
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .call(xAxis)
+      .attr("transform","translate(" + (margin_hist.left - 15) + "," + (margin_hist.top + height_hist) + ")")
+      .selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", function(d) {
+          return "rotate(-40)"
+        });
+
+  var costText_container = svg.append("g");
+
+  costText_container.append("text")
+    .classed("cost-text", true)
+    .attr("y",10)
+    .attr("x", width_hist*2/3)
+    .style("text-anchor", "middle")
+    .text("Histogram: Counts of Selected Patients by Cost ("+ numBins+ " bins)")
+    ;
+
+  commas = d3.format(",.0f");
+
+  costText_container.append("text")
+      .attr("y", (20))
+      .attr("x", width_hist*2/3)
+      .style("text-anchor", "middle")
+      .html("Cumulative Costs of Selected Patients: $"+ commas(cumCost))
+      ;
+
+  costText_container.append("text")
+      .attr("y", (30))
+      .attr("x", width_hist*2/3)
+      .style("text-anchor", "middle")
+      .html("Total Costs Across All Patients: $"+ commas(totCost))
+      ;
+
+  costText_container.append("text")
+      .attr("y", (40))
+      .attr("x", width_hist*2/3)
+      .style("text-anchor", "middle")
+      .html("Percent of Total Costs Contributed by Selected Patients: "+ d3.round(pctCost,1)+"%")
+      ;
+
+  costText_container.append("text")
+      .attr("y", (50))
+      .attr("x", width_hist*2/3)
+      .style("text-anchor", "middle")
+      .html("Count of Selected Patients: "+ commas(numPatients))
+      ;
+
+  costText_container.append("text")
+      .attr("y", (60))
+      .attr("x", width_hist*2/3)
+      .style("text-anchor", "middle")
+      .html("Total Patients: "+ commas(allPatients.length))
+      ;
+
+  costText_container.append("text")
+      .attr("y", (70))
+      .attr("x", width_hist*2/3)
+      .style("text-anchor", "middle")
+      .html("Selected Percentage of Patients: "+ d3.round((100*numPatients/allPatients.length),2)+"%")
+      ;
+
+  costText_container.append("text")
+      .attr("y", (height_hist + margin_hist.top + margin_hist.bottom*(3/4)))
+      .attr("x", width_hist/2)
+      // .style("text-anchor", "right")
+      .text("Bin Floors ($)")
+      ;
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+      .attr("transform","translate(" + margin_hist.left + "," + margin_hist.top + ")")      
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 3)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Count of Patients")
+      ;
+};
+
+//generate chronic barchart
+var d_chron = document,
+    g_chron = d_chron.getElementsByClassName('chronic-wrap')[0],
+    margin_chron = {top: 50, right: 40, bottom: 60, left: 40},
+    width_chron = g_chron.clientWidth - margin_chron.left - margin_chron.right,
+    height_chron = 600 - margin_chron.top - margin_chron.bottom;
+
+var x_chron = d3.scale.ordinal()
+    .rangeRoundBands([0, width_chron], .1);
+
+var y_chron = d3.scale.linear()
+    .range([height_chron, 0]);
+
+var xAxis_chron = d3.svg.axis()
+    .scale(x_chron)
+    .orient("bottom");
+
+var yAxis_chron = d3.svg.axis()
+    .scale(y_chron)
+    .orient("left")
+    .ticks(10, "%");
+
+var svg = d3.select(".chronic-wrap").append("svg")
+    .classed("chron",true)
+    .attr("width", width_chron + margin_chron.left + margin_chron.right)
+    .attr("height", height_chron + margin_chron.top + margin_chron.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin_chron.left + "," + margin_chron.top + ")");
+
+//chronic barchart FUNCTIONS//
+
+function makeChron(json){
+  var svg = d3.select('.chron');
+ 
+  svg.selectAll('.bar')
+  .remove();
+
+  svg.selectAll('g')
+  .remove();
+
+  var data = json;
+  var dataKeys = d3.keys(data);
+
+  x_chron.domain(dataKeys.map(function(d) {return d;}));
+  y_chron.domain([0,1]);
+
+  svg.selectAll(".bar")
+      .data(dataKeys)
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("x", function(d) { return x_chron(d); })
+      .attr("width", x_chron.rangeBand())
+      .attr("y", function(d) { return y_chron(data[d]["pct"]); })
+      .attr("height", function(d) { return height_chron - y_chron(data[d]["pct"]); })
+      .attr("transform","translate(" + margin_chron.left + "," + margin_chron.top + ")")
+       .on("mouseover", function(d) {
+
+        //Get this bar's x/y values, then augment for the tooltip
+        // var xPosition = parseFloat(d3.select(this).attr("x")) + x_chron.rangeBand() / 2;
+        // var yPosition = parseFloat(d3.select(this).attr("y")) / 2 + height_chron / 2;
+        var xPosition = 4*margin_chron.right+width_chron;
+        var yPosition = margin_chron.top;
+
+        //Update the tooltip position and value
+        d3.select("#tooltip")
+          .style("left", xPosition + "px")
+          .style("top", yPosition + "px")           
+          .select("#value")
+          .text(d+": " + d3.round(100*data[d]["pct"],1) + "% (" + commas(data[d]["num"]) + " patients)");
+       
+        //Show the tooltip
+        d3.select("#tooltip").classed("hidden", false);
+
+       })
+       .on("mouseout", function() {
+       
+        //Hide the tooltip
+        d3.select("#tooltip").classed("hidden", true);
+        })
+      ;
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .call(xAxis_chron)
+      .attr("transform","translate(" + (margin_chron.left) + "," + (margin_chron.top + height_chron) + ")")
+      .selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", function(d) {
+          return "rotate(-40)"
+        });
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis_chron)
+      .attr("transform","translate(" + margin_chron.left + "," + margin_chron.top + ")")      
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Percent of Patients")
+      ;
+};
+
+//generate slider
+var d = document,
+    g = d.getElementsByClassName('slider-wrap')[0],
+    margin = {top: 20, right: 50, bottom: 214, left: 50},
+    width = g.clientWidth - margin.left - margin.right,
+    height = 260 - margin.top - margin.bottom;
+
+var x = d3.scale.linear()
+    // .domain([0, 0.99])
+    .range([0, width]);
+
+var arc = d3.svg.arc()
+    .outerRadius(height / 2)
+    .startAngle(0)
+    .endAngle(function(d, i) { return i ? -Math.PI : Math.PI; });
+
+var svg = d3.select(".slider-wrap").append("svg")
+    .classed("slider",true)
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.svg.axis().scale(x).orient("bottom").ticks(10, "%"));
+
+var text_container = svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + 0 + ")")
+    .call(d3.svg.axis().scale(x).orient("top").ticks(10, "%").tickValues([0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95]))
+    
+text_container.append("text")
+      .classed("extent-text", true)
+      .attr("y",55)
+      .attr("x", width_chron)
+      .style("text-anchor", "right")
+      // .text("Extent:")
+      ;
+
+// slider function
+function slideExtent(ext) {
+  // var svg = d3.select('.slider'),
+  lowend = d3.round(100*ext[0])
+  highend = d3.round(100*ext[1]);
+
+  d3.select(".extent-text").text("Min: " + lowend +"% -------- Max: "+ highend +"%");
+};
+
+d3.json("ptsByPercentile.json", function(error, json){
+  if(error){return console.warn(error);}
+
+  var data = json;
+  var dataKeys = d3.keys(data);
+
+  var brush = d3.svg.brush()
+      .x(x)
+      .extent([0, 1])
+      .on("brushstart", brushstart)
+      .on("brush", brushmove)
+      .on("brushend", brushend);
+
+  var brushg = svg.append("g")
+      .attr("class", "brush")
+      .call(brush);
+
+  brushg.selectAll(".resize").append("path")
+      .attr("transform", "translate(0," +  height / 2 + ")")
+      .attr("d", arc);
+
+  brushg.selectAll("rect")
+      .attr("height", height);
+
+  function brushstart() {
+    svg.classed("selecting", true);
+  }
+
+  function brushmove() {
+    var s = brush.extent();
+    slideExtent(s);
+  }
+
+  function brushend() {
+    if (!d3.event.sourceEvent) return; // only transition after input
+    var extent0 = brush.extent(),
+        extent1 = extent0.map(function(num){
+          return d3.round(num, 2);
+        });
+
+    // if empty when rounded, use floor & ceil instead
+    if (extent1[0] >= extent1[1]) {
+      extent1[0] = Math.floor(extent0[0]);
+      extent1[1] = Math.ceil(extent0[1]);
+    }
+
+    d3.select(this).transition()
+        .call(brush.extent(extent1))
+        .call(brush.event);
+
+    var s = brush.extent();
+    lower = d3.round(s[0]*100);
+    upper = d3.round(s[1]*100);
+    if (lower == 100){ // ??
+      lower--;
+    }        
+    if (upper == 100){ // ??
+      upper--;
+    }       
+    patients = []
+    for (i=lower; i<=upper; i++){
+      patients.push(data[i]["patients"]);
+    }
+
+    allPatients = []
+    dataKeys.forEach(function(d) {data[d]["patients"].forEach(function(d2) {allPatients.push(d2);});});
+
+    patientsFlat = []
+    patients.forEach(function(d) {d.forEach(function(d2) {patientsFlat.push(d2);});})
+    numPatients = patientsFlat.length
+
+    d3.json("ptCostChronic.json", function(error, json2){
+      if(error){return console.warn(error);}
+      var costChronicData = json2;
+      // var costKeys = d3.keys(costData);
+
+      minCost = d3.min(patientsFlat, function(d) {return costChronicData[d]["cost"];});
+      maxCost = d3.max(patientsFlat, function(d) {return costChronicData[d]["cost"];});
+      meanCost = d3.mean(patientsFlat, function(d) {return costChronicData[d]["cost"];});
+      cumCost = d3.sum(patientsFlat, function(d) {return costChronicData[d]["cost"];});
+      totCost = d3.sum(allPatients, function(d) {return costChronicData[d]["cost"];});
+      pctCost = cumCost*100 / totCost;
+
+      var costRange = maxCost - minCost;
+      // var numBins = 10;
+      var binWidth = costRange/numBins;
+
+      var histogram = {};
+      for (i=0; i<numBins; i++) {
+        var binFloor = i*binWidth+minCost;
+        var binCeiling = (i+1)*binWidth+minCost;
+        var binQuant = 0;
+        patientsFlat.forEach(function(d) {
+          var tempCost = costChronicData[d]["cost"];
+          if (i == numBins-1) {
+            if (tempCost >= binFloor) {
+              binQuant++;
+            }
+          }
+          else if ((tempCost >= binFloor) && (tempCost < binCeiling)) {
+            binQuant++;
+          };
+        })
+        histogram[i] = {"floor": binFloor, "quant": binQuant};
+      }
+
+      chronicDis = ["alzheimers", "heartFailure", "kidney", "cancer", "COPD", "depression", "diabetes", "ischemicHeart", "osteo", "arthritis", "stroke"]
+      chronicCounts = {}
+      chronicDis.forEach(function(d) {chronicCounts[d] = {"num": 0, "pct": 0};})
+      patientsFlat.forEach(function(d) {
+        costChronicData[d]["chronics"].forEach(function(d2) {
+          chronicCounts[d2]["num"]++
+        });
+      });
+      chronicDis.forEach(function(d) {
+        chronicCounts[d]["pct"] = chronicCounts[d]["num"]/numPatients;
+      })
+      makeHist(histogram);
+      makeChron(chronicCounts);
+    });
+  }
+});
+</script>
