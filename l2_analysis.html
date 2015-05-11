@@ -134,9 +134,15 @@
 						console.log(l2diagdata);
 						console.log(all_codes.length);
 						console.log(icd9_data);
-						console.log(icd9_data['total_uniques']);
+						console.log(icd9_data['total_claims']);
 
-						var max_x = d3.max(all_codes, function(d) { return l2diagdata[d]['total_claims']/icd9_data['total_claims']; });
+						var total_claims = 0;
+
+						all_codes.forEach(function(c){
+							total_claims += l2diagdata[c]['total_claims'];
+						});
+
+						var max_x = d3.max(all_codes, function(d) { return l2diagdata[d]['total_claims']/total_claims; });
 						var max_y = d3.max(all_codes, function(d) { return l2diagdata[d]['total_cost']/l2diagdata[d]['total_claims']; });
 
 
@@ -189,7 +195,7 @@
 								.attr("code",d)
 								.attr("l1_code",l1_id)
 								.attr("cx",function(){
-									return xScale(l2diagdata[d]['uniques']/icd9_data['total_uniques'])
+									return xScale(l2diagdata[d]['total_claims']/total_claims)
 								})
 								.attr("cy",function(){
 									return yScale(l2diagdata[d]['total_cost']/l2diagdata[d]['total_claims']);
@@ -202,7 +208,7 @@
 								});
 
 								nodegroup.append("text")
-								.html("Diagnosis: " + l2_decode[d] + "<br />Frequency: " + (l2diagdata[d]['uniques']/icd9_data['total_uniques']).toFixed(6) + "<br />Avg. Claim Cost: $" + (l2diagdata[d]['total_cost']/l2diagdata[d]['total_claims']).toFixed(2) + "<br/>Total Claims: " + l2diagdata[d]['total_claims'].toFixed(0) + "<br/>Total Cost: $" + l2diagdata[d]['total_cost'].toFixed(2))
+								.html("Diagnosis: " + l2_decode[d] + "<br />Frequency: " + (l2diagdata[d]['total_claims']/total_claims).toFixed(6) + "<br />Avg. Claim Cost: $" + (l2diagdata[d]['total_cost']/l2diagdata[d]['total_claims']).toFixed(2) + "<br/>Total Claims: " + l2diagdata[d]['total_claims'].toFixed(0) + "<br/>Total Cost: $" + l2diagdata[d]['total_cost'].toFixed(2))
 								.attr("x", 20)
 								.attr("y", 20)
 								.style('display','none');
@@ -248,7 +254,7 @@
 				  			svg.selectAll("circle")
 							.attr("cx", function() {
 								code = d3.select(this).attr("code");
-								return xScale(l2diagdata[code]['uniques']/icd9_data['total_uniques']);
+								return xScale(l2diagdata[d]['total_claims']/total_claims);
 							})
 							.attr("cy", function(){
 								code = d3.select(this).attr("code");
