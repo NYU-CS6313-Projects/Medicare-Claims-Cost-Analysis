@@ -171,7 +171,12 @@
 								var small_mult = d3.select(".graphwrap").append("svg")
 								.classed("small_mult", true)
 								.attr("width", w)
-								.attr("height", h);
+								.attr("height", h)
+								.on("mouseleave",function(){
+									d3.select(this).select(".sm_nodeinfo").text("");
+									d3.select(this).select(".sm_nodeinfo_ac").text("");
+									d3.select(this).select(".sm_nodeinfo_af").text("");
+								});
 
 								small_mult.append("text")
 								.attr("text-anchor","middle")
@@ -211,6 +216,33 @@
 								.style("fill","rgb(230,230,230)")
 								.text("Total Cost: $" + l1_info[lc]['total_cost'].toFixed(2))
 
+								small_mult.append("text")
+								.classed("sm_nodeinfo",true)
+								.attr("text-anchor","end")
+								.attr("x",w-10)
+								.attr("y",120)
+								.attr("font-size","10")
+								.style("fill","rgb(230,230,230)")
+								.text("")
+
+								small_mult.append("text")
+								.classed("sm_nodeinfo_ac",true)
+								.attr("text-anchor","end")
+								.attr("x",w-10)
+								.attr("y",135)
+								.attr("font-size","10")
+								.style("fill","rgb(230,230,230)")
+								.text("")
+
+								small_mult.append("text")
+								.classed("sm_nodeinfo_af",true)
+								.attr("text-anchor","end")
+								.attr("x",w-10)
+								.attr("y",150)
+								.attr("font-size","10")
+								.style("fill","rgb(230,230,230)")
+								.text("")
+
 								var avg_cost = l1_info[lc]['total_cost']/l1_info[lc]['total_claims'];
 
 								all_diag_cost += l1_info[lc]['total_cost'];
@@ -233,7 +265,11 @@
 
 										var nodegroup = small_mult.append("g").classed("nodegroup",true)
 											.attr("l1_id",l1_id)
-											.on("click",nodeclick);
+											.on("mouseover",function(){
+												small_mult.select(".sm_nodeinfo").text(labelinfo['diagnosis'][code]['name']);
+												small_mult.select(".sm_nodeinfo_ac").text("Freq.: " + (dataset[code]['uniques']/dataset['total_uniques']).toFixed(6));
+												small_mult.select(".sm_nodeinfo_af").text("Avg. Claim Cost: $" + (dataset[code]['total_cost'] / dataset[code]['total_claims']).toFixed(2));
+											});
 
 										nodegroup.append("circle")
 										.attr("code",d)
