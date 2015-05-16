@@ -4,6 +4,7 @@ from beneficiaryORG import getFiles
 
 def readBenSum(list):
 
+  patientCosts = {}
   for item in list:
     loc = "../" + item  
     with open(loc, "rb") as csvfile:
@@ -15,7 +16,7 @@ def readBenSum(list):
       outpatientCostIndex = headers.index('MEDREIMB_OP')
       carrierCostIndex = headers.index('MEDREIMB_CAR')
 
-      patientCosts = {}
+     ##patientCosts = {}
 
       for patient in beneficiaries:
         patID = patient[patIndex]

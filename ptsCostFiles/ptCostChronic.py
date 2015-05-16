@@ -4,6 +4,7 @@ from beneficiaryORG import getFiles
 
 def readBenSum(list, chronics):
 
+  patientStuff = {} 
   for item in list: 
     loc = "../" + item  
     with open(loc, "rb") as csvfile:
@@ -29,7 +30,7 @@ def readBenSum(list, chronics):
       chronicIndices["arthritis"]     = headers.index('SP_RA_OA')
       chronicIndices["stroke"]        = headers.index('SP_STRKETIA')
 
-      patientStuff = {}
+      #patientStuff = {}
 
       for patient in beneficiaries:
         patID = patient[patIndex]
