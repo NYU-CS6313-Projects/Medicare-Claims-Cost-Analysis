@@ -4,8 +4,8 @@ from beneficiaryORG import getFiles
 
 def readBenSum(list, chronics):
 
-  for item in list:
-    loc = "../" + item 
+  for item in list: 
+    loc = "../" + item  
     with open(loc, "rb") as csvfile:
       beneficiaries = csv.reader(csvfile)
       headers = beneficiaries.next()

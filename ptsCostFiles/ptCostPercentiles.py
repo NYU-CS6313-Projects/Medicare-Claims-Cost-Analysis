@@ -1,13 +1,11 @@
 import csv
 import json
-from beneficiaryORG import getFiles 
+from beneficiaryORG import getFiles
 
 def readBenSum(list):
 
-  patientCosts = [] 
-
   for item in list:
-    loc = "../" + item 
+    loc = "../" + item  
     with open(loc, "rb") as csvfile:
       beneficiaries = csv.reader(csvfile)
       headers = beneficiaries.next()
@@ -17,19 +15,30 @@ def readBenSum(list):
       outpatientCostIndex = headers.index('MEDREIMB_OP')
       carrierCostIndex = headers.index('MEDREIMB_CAR')
 
+      patientCosts = {}
+
       for patient in beneficiaries:
         patID = patient[patIndex]
         inpatientCost = float(patient[inpatientCostIndex])
         outpatientCost = float(patient[outpatientCostIndex])
         carrierCost = float(patient[carrierCostIndex])
         totalCost = inpatientCost + outpatientCost + carrierCost
-        patientCosts.append((patID, totalCost))
+      # toggle here to eliminate 0 cost
+        if totalCost > minCost:
+          if patID in patientCosts:
+            patientCosts[patID] += totalCost
+          else:
+            patientCosts[patID] = totalCost
 
-    return (patientCosts)  
+  return (patientCosts)
+
 
 def getPercentiles(ptCosts):
+  ptCostList = []
+  for i in ptCosts:
+    ptCostList.append([i, ptCosts[i]])
 
-  ptCosts.sort(key=lambda x: x[1])
+  ptCostList.sort(key=lambda x: x[1])
   numPts = len(ptCosts)
 
   pctileDict = {}
@@ -37,14 +46,14 @@ def getPercentiles(ptCosts):
     pctileDict[i] = {}
     pctileDict[i]["patients"] = []
     reverseIndex = numPts*i/100
-    pctileDict[i]["costFloor"] = ptCosts[reverseIndex][1]
+    pctileDict[i]["costFloor"] = ptCostList[reverseIndex][1]
 
   for i in range(len(ptCosts)):
     index = int(i*100/numPts)
-    pctileDict[index]["patients"].append(ptCosts[i][0])
+    pctileDict[index]["patients"].append(ptCostList[i][0])
 
   # for i in pctileDict:
-  #   print i, len(pctileDict[i]["patients"]), pctileDict[i]["costFloor"], "\n"
+  #   print i, len(pctileDict[i]["patients"]), pctileDict[i]["costFloor"]
 
   return(pctileDict)
 
@@ -56,12 +65,11 @@ def jsonDump(dict, writeFile):
 
 
 if __name__=='__main__':
- 
-  benSumFile = getFiles()  
+  minCost = 0
+
+  benSumFile = getFiles() 
   jsonWriteFile = "ptsByPercentile.json"
 
-  ptCostList = readBenSum(benSumFile)
-  ptsByPercentile = getPercentiles(ptCostList)
+  ptCostDict = readBenSum(benSumFile)
+  ptsByPercentile = getPercentiles(ptCostDict)
   jsonDump(ptsByPercentile, jsonWriteFile)
-
-	
