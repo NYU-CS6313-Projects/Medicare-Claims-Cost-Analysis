@@ -245,10 +245,10 @@
 								.style("fill","rgb(230,230,230)")
 								.text("")
 
-								var avg_cost = l1_info[lc]['total_cost']/l1_info[lc]['unique_claims'];
+								var avg_cost = l1_info[lc]['total_cost']/l1_info[lc]['total_claims'];
 
 								all_diag_cost += l1_info[lc]['total_cost'];
-								all_diag_claims += l1_info[lc]['unique_claims'];
+								all_diag_claims += l1_info[lc]['total_claims'];
 
 								//Create circles
 								all_codes.forEach(function(d){
