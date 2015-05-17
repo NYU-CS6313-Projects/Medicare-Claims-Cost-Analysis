@@ -1,0 +1,75 @@
+.init-message{
+  height:200px;
+  width:200px;
+  text-align:center;
+}
+
+.Absolute-Center {
+  margin: auto;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+}
+
+text{
+  fill:#fff;
+  font-size:12px;
+}
+
+text tspan{
+  font-weight:bold;
+}
+
+.bar {
+  fill: rgb(107,174,214);
+}
+
+.bar:hover {
+  fill: rgb(8,48,107);
+}
+
+.bar.cat:hover{
+  stroke:#eee;
+}
+
+.resize path {
+  fill: rgb(200,200,200);
+  stroke: #000;
+}
+
+.brush .extent {
+  fill: rgb(50,50,50);
+  shape-rendering: crispEdges;
+}
+
+.extent-text{
+  fill:#fff;
+  font-size:12px;
+}
+
+.histogram-wrap{
+  display:inline-block;
+  width:49%;
+}
+
+.chronic-wrap{
+  display:inline-block;
+  width:49%;
+}
+
+#tooltip {
+  position: absolute;
+  right:20px;
+  top:120px;
+  width:300px;
+  text-align:right;
+  padding: 10px;
+}
+
+#tooltip.hidden {
+  display: none;
+}
+
+#tooltip p {
+  font-size: 12px;
+  color:#fff;
+}
