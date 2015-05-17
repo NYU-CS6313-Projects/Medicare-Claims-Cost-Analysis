@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   	<!--<link rel="shortcut icon" type="image/x-icon" href="icon.png">-->
-  	<title>Medicare Claims Cost Analysis</title>
+  	<title>Medicare Spending Analysis</title>
   	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
   	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
@@ -121,6 +121,8 @@
 
 							var l1_info = json;
 
+							console.log(l1_info);
+
 							console.log(all_codes.length);
 							console.log(dataset);
 							//console.log(labelinfo);
@@ -198,7 +200,7 @@
 								.attr("y",60)
 								.attr("font-size","10")
 								.style("fill","rgb(230,230,230)")
-								.text("Avg. Freq.: " + (l1_info[lc]['total_claims']/dataset['total_claims']).toFixed(6))
+								.text("Avg. Freq.: " + (l1_info[lc]['unique_claims']/dataset['total_claims']).toFixed(6))
 
 								small_mult.append("text")
 								.attr("text-anchor","end")
@@ -206,7 +208,7 @@
 								.attr("y",75)
 								.attr("font-size","10")
 								.style("fill","rgb(230,230,230)")
-								.text("Total Claims: " + l1_info[lc]['total_claims'])
+								.text("Total Claims: " + l1_info[lc]['unique_claims'])
 
 								small_mult.append("text")
 								.attr("text-anchor","end")
@@ -243,10 +245,10 @@
 								.style("fill","rgb(230,230,230)")
 								.text("")
 
-								var avg_cost = l1_info[lc]['total_cost']/l1_info[lc]['total_claims'];
+								var avg_cost = l1_info[lc]['total_cost']/l1_info[lc]['unique_claims'];
 
 								all_diag_cost += l1_info[lc]['total_cost'];
-								all_diag_claims += l1_info[lc]['total_claims']
+								all_diag_claims += l1_info[lc]['unique_claims'];
 
 								//Create circles
 								all_codes.forEach(function(d){
@@ -338,7 +340,7 @@
 								.attr("transform", "translate(" + p.left + ",0)")
 								.call(yAxis);
 
-								if(num_sm==0){
+								//if(num_sm==0){
 									small_mult.append("text")
 									.classed("axistext",true)
 									.attr("x", w/2)
@@ -353,7 +355,7 @@
 									.attr("dy", "1em")
 									.style("text-anchor", "end")
 									.text("Average Claim Cost ($)");
-								}else{
+								/*}else{
 									small_mult.select('.x.axis').selectAll('.tick')
 									.select('text').remove();
 
@@ -361,7 +363,7 @@
 									.select('text').remove();
 								}
 
-								num_sm++;
+								num_sm++;*/
 							})
 							
 						var total_avg = all_diag_cost/all_diag_claims;

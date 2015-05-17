@@ -137,8 +137,8 @@
 						console.log(icd9_data['total_claims']);
 						console.log(icd9_data['total_uniques']);
 
-						var max_x = d3.max(all_codes, function(d) { return l2diagdata[d]['total_claims']/icd9_data['total_claims']; });
-						var max_y = d3.max(all_codes, function(d) { return l2diagdata[d]['total_cost']/l2diagdata[d]['total_claims']; });
+						var max_x = d3.max(all_codes, function(d) { return l2diagdata[d]['unique_claims']/icd9_data['total_claims']; });
+						var max_y = d3.max(all_codes, function(d) { return l2diagdata[d]['total_cost']/l2diagdata[d]['unique_patients']; });
 
 
 						//Create scale functions
@@ -190,10 +190,10 @@
 								.attr("code",d)
 								.attr("l1_code",l1_id)
 								.attr("cx",function(){
-									return xScale(l2diagdata[d]['total_claims']/icd9_data['total_claims'])
+									return xScale(l2diagdata[d]['unique_claims']/icd9_data['total_claims'])
 								})
 								.attr("cy",function(){
-									return yScale(l2diagdata[d]['total_cost']/l2diagdata[d]['total_claims']);
+									return yScale(l2diagdata[d]['total_cost']/l2diagdata[d]['unique_patients']);
 								})
 								.attr("r",radius)
 								//.style("fill",color[color.length/2])
@@ -203,7 +203,7 @@
 								});
 
 								nodegroup.append("text")
-								.html("Diagnosis: " + l2_decode[d] + "<br />Frequency: " + (l2diagdata[d]['total_claims']/icd9_data['total_claims']).toFixed(6) + "<br />Avg. Claim Cost: $" + (l2diagdata[d]['total_cost']/l2diagdata[d]['total_claims']).toFixed(2) + "<br/>Total Claims: " + l2diagdata[d]['total_claims'].toFixed(0) + "<br/>Total Cost: $" + l2diagdata[d]['total_cost'].toFixed(2))
+								.html("Diagnosis: " + l2_decode[d] + "<br />Frequency: " + (l2diagdata[d]['unique_claims']/icd9_data['total_claims']).toFixed(6) + "<br />Avg. Patient Cost: $" + (l2diagdata[d]['total_cost']/l2diagdata[d]['unique_patients']).toFixed(2) + "<br/>Total Claims: " + l2diagdata[d]['unique_claims'].toFixed(0) + "<br/>Total Cost: $" + l2diagdata[d]['total_cost'].toFixed(2))
 								.attr("x", 20)
 								.attr("y", 20)
 								.style('display','none');
@@ -240,7 +240,7 @@
 						.attr("x",-(h/2))
 						.attr("dy", "1em")
 						.style("text-anchor", "middle")
-						.text("Average Claim Cost ($)");
+						.text("Average Patient Cost ($)");
 
 						function zoom() {
 							svg.select(".x.axis").call(xAxis);
@@ -249,11 +249,11 @@
 				  			svg.selectAll("circle")
 							.attr("cx", function() {
 								code = d3.select(this).attr("code");
-								return xScale(l2diagdata[d]['total_claims']/icd9_data['total_claims']);
+								return xScale(l2diagdata[code]['unique_claims']/icd9_data['total_claims']);
 							})
 							.attr("cy", function(){
 								code = d3.select(this).attr("code");
-								return yScale(l2diagdata[code]['total_cost']/l2diagdata[code]['total_claims']);
+								return yScale(l2diagdata[code]['total_cost']/l2diagdata[code]['unique_patients']);
 							});
 						}
 					});
