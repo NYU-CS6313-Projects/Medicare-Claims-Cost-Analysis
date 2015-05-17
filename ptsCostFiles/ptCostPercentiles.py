@@ -2,11 +2,11 @@ import csv
 import json
 from beneficiaryORG import getFiles
 
-def readBenSum(list):
+def readBenSum(list, index_list):
 
   patientCosts = {}
-  for item in list:
-    loc = "../" + item  
+  for ind in index_list:
+    loc = "../" + list[ind]   
     with open(loc, "rb") as csvfile:
       beneficiaries = csv.reader(csvfile)
       headers = beneficiaries.next()
@@ -67,10 +67,10 @@ def jsonDump(dict, writeFile):
 
 if __name__=='__main__':
   minCost = 0
-
+  index_list = [4, 13, 18, 2, 16, 11, 0, 1]
   benSumFile = getFiles() 
   jsonWriteFile = "ptsByPercentile.json"
 
-  ptCostDict = readBenSum(benSumFile)
-  ptsByPercentile = getPercentiles(ptCostDict)
+  ptCostDict = readBenSum(benSumFile, index_list)
+  ptsByPercentile = getPercentiles(ptCostDict) 
   jsonDump(ptsByPercentile, jsonWriteFile)
