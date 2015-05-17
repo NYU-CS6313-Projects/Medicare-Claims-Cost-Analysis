@@ -302,8 +302,9 @@ function slideExtent(ext) {
   d3.select(".extent-text").text("Min: " + lowend +"% -------- Max: "+ highend +"%");
 };
 
-d3.json("data/slider/ptsByPercentile_5-10-15.json", function(error, json){
+// d3.json("data/slider/ptsByPercentile_5-10-15.json", function(error, json){
 // d3.json("data/slider/new/ptsByPercentile.json", function(error, json){
+d3.json("ptsCostFiles/ptsByPercentile.json", function(error, json){
   if(error){return console.warn(error);}
 
   var data = json;
@@ -377,8 +378,9 @@ d3.json("data/slider/ptsByPercentile_5-10-15.json", function(error, json){
     patients.forEach(function(d) {d.forEach(function(d2) {patientsFlat.push(d2);});})
     numPatients = patientsFlat.length
 
-    d3.json("data/slider/ptCostChronic_5-10-15.json", function(error, json2){
+    // d3.json("data/slider/ptCostChronic_5-10-15.json", function(error, json2){
     // d3.json("data/slider/new/ptCostChronic.json", function(error, json2){
+    d3.json("ptsCostFiles/ptCostChronic.json", function(error, json2){
       if(error){return console.warn(error);}
       var costChronicData = json2;
       // var costKeys = d3.keys(costData);
