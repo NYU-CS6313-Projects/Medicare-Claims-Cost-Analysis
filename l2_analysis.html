@@ -138,7 +138,7 @@
 						console.log(icd9_data['total_uniques']);
 
 						var max_x = d3.max(all_codes, function(d) { return l2diagdata[d]['unique_claims']/icd9_data['total_claims']; });
-						var max_y = d3.max(all_codes, function(d) { return l2diagdata[d]['total_cost']/l2diagdata[d]['unique_patients']; });
+						var max_y = d3.max(all_codes, function(d) { return l2diagdata[d]['total_cost']/l2diagdata[d]['total_claims']; });
 
 
 						//Create scale functions
@@ -193,7 +193,7 @@
 									return xScale(l2diagdata[d]['unique_claims']/icd9_data['total_claims'])
 								})
 								.attr("cy",function(){
-									return yScale(l2diagdata[d]['total_cost']/l2diagdata[d]['unique_patients']);
+									return yScale(l2diagdata[d]['total_cost']/l2diagdata[d]['total_claims']);
 								})
 								.attr("r",radius)
 								//.style("fill",color[color.length/2])
@@ -203,7 +203,7 @@
 								});
 
 								nodegroup.append("text")
-								.html("Diagnosis: " + l2_decode[d] + "<br />Frequency: " + (l2diagdata[d]['unique_claims']/icd9_data['total_claims']).toFixed(6) + "<br />Avg. Patient Cost: $" + (l2diagdata[d]['total_cost']/l2diagdata[d]['unique_patients']).toFixed(2) + "<br/>Total Claims: " + l2diagdata[d]['unique_claims'].toFixed(0) + "<br/>Total Cost: $" + l2diagdata[d]['total_cost'].toFixed(2))
+								.html("Diagnosis: " + l2_decode[d] + "<br />Frequency: " + (l2diagdata[d]['unique_claims']/icd9_data['total_claims']).toFixed(6) + "<br />Avg. Patient Cost: $" + (l2diagdata[d]['total_cost']/l2diagdata[d]['total_claims']).toFixed(2) + "<br/>Total Claims: " + l2diagdata[d]['unique_claims'].toFixed(0) + "<br/>Total Cost: $" + l2diagdata[d]['total_cost'].toFixed(2))
 								.attr("x", 20)
 								.attr("y", 20)
 								.style('display','none');
@@ -253,7 +253,7 @@
 							})
 							.attr("cy", function(){
 								code = d3.select(this).attr("code");
-								return yScale(l2diagdata[code]['total_cost']/l2diagdata[code]['unique_patients']);
+								return yScale(l2diagdata[code]['total_cost']/l2diagdata[code]['total_claims']);
 							});
 						}
 					});
