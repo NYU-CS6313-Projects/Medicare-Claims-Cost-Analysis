@@ -1,4 +1,5 @@
 Medicare Claims Analysis
+========================
 
 Using the following [Medicare Data](http://www.cms.gov/Research-Statistics-Data-and-Systems/Downloadable-Public-Use-Files/SynPUFs/DE_Syn_PUF.html), this project seeks to build a comprehensive, exploratory and visually engaging analytical tool in order to help health professionals find and analyze trends in Medicare claim costs.
 
