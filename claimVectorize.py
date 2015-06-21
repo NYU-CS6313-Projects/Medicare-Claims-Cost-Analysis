@@ -39,36 +39,80 @@ def extractClaims(list, db):
 		diagList = [diag1_index, diag2_index, diag3_index, diag4_index, diag5_index, diag6_index, diag7_index, diag8_index, diag9_index, diag10_index]
 
 		for visit in reader:
+
 			patientID = visit[desynpuf_id_index] 
 			claimAmount = visit[clm_pmt_amt_index]
 			claimStartDate = visit[clm_from_dt_index] 
 			lengthOfStay = visit[clm_utlztn_cnt_index] 
 			
-			index = 0 
-			diagnosisCount = 0  		
-	
-			while index < 10:
-				if visit[diagList[index]] != '': 
-					diagnosisCount += 1 
-					index += 1
-				else:
-					index = 10 			
-	
-			if patientID in db:
-				rowData = [patientID, claimAmount, claimStartDate, lengthOfStay, diagnosisCount]
-				data.append(rowData) 
-				
-				if patientID not in counterClaims: 	
-					counterClaims[patientID] = {} 
-					counterClaims[patientID][claimStartDate] = lengthOfStay 		
-				else:
-					counterClaims[patientID][claimStartDate] = lengthOfStay
-
-			else:
-				pass 
-
-	print counterClaims
+			if clm_from_dt_index != '' and claimStartDate != '':	
+							
+				index = 0 
+				diagnosisCount = 0  		
 		
+				while index < 10:
+					if visit[diagList[index]] != '': 
+						diagnosisCount += 1 
+						index += 1
+					else:
+						index = 10 			
+		
+				if patientID in db:
+					rowData = [patientID, float(claimAmount), int(claimStartDate), int(lengthOfStay), diagnosisCount]
+					data.append(rowData) 
+					
+					if patientID not in counterClaims: 	
+						counterClaims[patientID] = {}
+						if lengthOfStay == '':
+							lengthOfstay = 1 
+							counterClaims[patientID][claimStartDate] = lengthOfStay
+						else:
+							counterClaims[patientID][claimStartDate] = int(lengthOfStay)
+					else:
+						if lengthOfStay == '':
+							lengthOfstay = 1
+							counterClaims[patientID][claimStartDate] = lengthOfStay
+						else:
+							counterClaims[patientID][claimStartDate] = int(lengthOfStay) 
+				else:
+					pass
+			else:
+				pass  
+
+	#for k, v in counterClaims.items():
+	#	for i in counterClaims[k].values():
+	#		if type(i) is str:
+	#			print counterClaims[k]
+	#			print 'HIGHLIGHT >>>>>>>>>>>>>'
+	#		else:
+	#			print counterClaims[k] 
+	
+	for row in data:
+	
+		patientID = row[0] 
+		claimDate = row[2]
+		claimYear = str(claimDate)[0:4] 
+	 
+		hospitalDays = sum([v for k, v in counterClaims[patientID].items() if k <= claimDate]) 
+		admissionsTo = len([v for k, v in counterClaims[patientID].items() if k <= claimDate])
+		       
+		row.append(hospitalDays) 
+		row.append(admissionsTo) 
+		
+		try:		
+			row.append(int(db[patientID]["sex"]))
+			row.append(int(db[patientID]["county"]))
+			row.append(int(db[patientID]["state"]))
+			row.append(int(db[patientID]["race"]))
+			row.append(int(db[patientID]["birth_date"]))
+
+			row.append(int(db[patientID][claimYear]["heart"]))
+			row.append(int(db[patientID][claimYear]["diabetes"])) 
+
+			print row 
+		except:
+			pass 
+ 
 if __name__=='__main__':
 	directory = os.environ['health_path']
 	files = getCMSFiles(directory, 'inpatient')[0:5]  
