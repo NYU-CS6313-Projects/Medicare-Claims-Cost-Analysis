@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  	<!--<link rel="shortcut icon" type="image/x-icon" href="icon.png">-->
+  	<title>Medicare Spending Analysis</title>
+  	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+  	<script src="js/functions.js"></script>
+  	<script src="js/radar-chart.js"></script>
+  	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+  	<link type="text/css" rel="stylesheet" media="all" href="css/style.css" />
+  	<link type="text/css" rel="stylesheet" media="all" href="css/radar-chart.css" />
+</head>
+<body>
+	<!--div class="filters">
+		<div id="chronic">
+			<div class="btn" id="chronbtn">Chronic Illnesses</div>
+			<div class="filtercontent" id="chroncontent">
+				<input type="checkbox" name="cancer" /> cancer <br/>
+				<input type="checkbox" name="COPD" /> COPD <br/>
+				<input type="checkbox" name="osteo" /> osteo <br/>
+				<input type="checkbox" name="ischemicHeart"/> ischemicHeart <br/>
+				<input type="checkbox" name="arthritis" /> arthritis <br/>
+				<input type="checkbox" name="heartFailure" /> heartFailure <br/>
+				<input type="checkbox" name="alzheimers" /> alzheimers <br/>
+				<input type="checkbox" name="stroke" /> stroke <br/>
+				<input type="checkbox" name="kidney" /> kidney <br/>
+				<input type="checkbox" name="depression" /> depression <br/>
+				<input type="checkbox" name="diabetes" /> diabetes <br/>
+			</div>
+		</div>
+		<div id="diagnosis">
+			<div class="btn" id="diagnosisbtn">Diagnosis</div>
+			<div class="filtercontent" id="diagcontent"></div>
+		</div>
+		<div id="procedures">
+			<div class="btn" id="procbtn">Procedures</div>
+			<div class="filtercontent" id="proccontent"></div>
+		</div>
+		<hr/>
+		<div class="btn" id="avg-toggle">Show Average Cost</div>
+		<hr/>
+		<div class="nodeinfo"></div>
+	</div-->
+	<div class="header">
+		<span>Patient Explorer</span>
+	</div>
+	<div class="graphwrap"></div>
+
+    <script type="text/javascript">
+	//Width and height
+	var w = window,
+	d = document,
+	e = d.documentElement,
+	g = d.getElementsByClassName('graphwrap')[0],
+	p = {top:50,left:50,bottom:0,right:0},
+	m = {top: 40, right: 0, bottom: 0, left: 0},
+    w = g.clientWidth/3 - 10;// + 50 - p.left - p.right - m.left - m.right,
+    h = 400 - m.top - m.bottom;
+
+	var dataset = [];
+
+	//var color = ['rgb(255,255,229)','rgb(255,247,188)','rgb(254,227,145)','rgb(254,196,79)','rgb(254,153,41)','rgb(236,112,20)','rgb(204,76,2)','rgb(153,52,4)','rgb(102,37,6)'];
+
+	var color = ['rgb(247,251,255)','rgb(222,235,247)','rgb(198,219,239)','rgb(158,202,225)','rgb(107,174,214)','rgb(66,146,198)','rgb(33,113,181)','rgb(8,81,156)','rgb(8,48,107)'];
+
+	//var color = ['rgb(239,243,255)','rgb(198,219,239)','rgb(158,202,225)','rgb(107,174,214)','rgb(49,130,189)','rgb(8,81,156)'];
+
+	//var bg_color = 'rgb(150,150,150)';
+	var bg_color = 'rgb(99,99,99)';
+
+	var cat_color = ['rgb(166,206,227)','rgb(31,120,180)','rgb(178,223,138)','rgb(51,160,44)','rgb(251,154,153)','rgb(227,26,28)','rgb(253,191,111)','rgb(255,127,0)','rgb(202,178,214)','rgb(106,61,154)','rgb(255,255,153)','rgb(177,89,40)','rgb(228,26,28)','rgb(55,126,184)','rgb(77,175,74)','rgb(152,78,163)','rgb(255,127,0)','rgb(255,255,51)'];
+
+	var gender_col = ['none','#377eb8','#4daf4a'];
+
+	//var color = ['rgb(5,48,97)','rgb(33,102,172)','rgb(67,147,195)','rgb(146,197,222)','rgb(209,229,240)','rgb(247,247,247)','rgb(253,219,199)','rgb(244,165,130)','rgb(214,96,77)','rgb(178,24,43)','rgb(103,0,31)'];
+
+	//var color = ['rgb(33,102,172)','rgb(67,147,195)','rgb(146,197,222)','rgb(209,229,240)','rgb(247,247,247)','rgb(253,219,199)','rgb(244,165,130)','rgb(214,96,77)','rgb(178,24,43)'];
+
+	function race_decode(race){
+		var ret = "";
+		switch(race){
+			case 'w':
+				ret = "1";
+				break;
+			case 'b':
+				ret = "2";
+				break;
+			case 'h':
+				ret = "3";
+				break;
+			case 'o':
+				ret = "4";
+				break;
+		}
+		return ret;
+	}
+
+	function gender_decode(g){
+		var ret = "";
+		switch(g){
+			case 'n/a':
+				ret = "0";
+				break;
+			case 'm':
+				ret = "1";
+				break;
+			case 'w':
+				ret = "2";
+				break;
+		}
+		return ret;		
+	}
+
+	d3.csv("data/patientmap/clust_out.csv", function(error, csvdata){
+		if(error){ return console.warn(error); }
+		console.log(csvdata);
+
+		var rowamt = 40;
+
+		var radardata = [];
+		
+		var max_cost = d3.max(csvdata, function(d){ return parseFloat(d['info__claim_cost'])});
+		var min_cost = d3.min(csvdata, function(d){ return parseFloat(d['info__claim_cost'])});
+		var avg_cost = d3.mean(csvdata, function(d){ return parseFloat(d['info__claim_cost'])});
+
+		var max_age = d3.max(csvdata, function(d){ return parseFloat(d['ageYears'])});
+		var max_claims = d3.max(csvdata, function(d){ return parseFloat(d['info__num_claims'])});
+		var max_claim_count = d3.max(csvdata, function(d){ return parseFloat(d['ipClmCt'])});
+		var max_totalLOS = d3.max(csvdata, function(d){ return parseFloat(d['totLOS'])});
+
+		csvdata.forEach(function(d){
+			var dict = {};
+			dict.className = d['id'];
+			dict.axes = [{axis:"age", value: (parseFloat(d['ageYears'])/max_age)},
+						{axis:"cost", value: (parseFloat(d['info__claim_cost'])/max_cost)},
+						{axis:"claims", value: (parseFloat(d['info__num_claims'])/max_claims)},
+						{axis:"claim_count", value: (parseFloat(d['ipClmCt'])/max_claim_count)},
+						{axis:"total_LOS", value: (parseFloat(d['totLOS'])/max_totalLOS)},
+						//{axis:"dead", value: d['info__dead']}
+						];
+			dict.clust = parseInt(d['clust']);
+			dict.cost = parseFloat(d['info__claim_cost']);
+			//dict.race = race_decode(d['info__race']);
+			//dict.gender = gender_decode(d['info__gender']);
+			//dict.score = (parseFloat(d['info__age'])/max_age) + (parseFloat(d['info__claim_cost'])/max_cost) + (parseFloat(d['info__num_claims'])/max_claims) + parseFloat(d['info__dead']);
+			radardata.push(dict);
+		})
+
+		radardata = radardata.sort(function(d1,d2){ return d3.ascending(d1.clust,d2.clust)});
+
+		console.log(radardata);
+		
+		var chart = RadarChart.chart();
+
+		var colors = d3.scale.linear()
+    	//.base(Math.E)
+	    .domain([min_cost,avg_cost,max_cost])
+	    .range(["red","white","green"]);
+
+		chart.config({
+		  containerClass: 'radar-chart', // target with css, default stylesheet targets .radar-chart
+		  w: parseInt(g.clientWidth/rowamt) - 10,
+		  h: parseInt(g.clientWidth/rowamt) - 10,
+		  factor: 0.95,
+		  factorLegend: 1,
+		  levels: 2,
+		  maxValue: 1,
+		  radians: 2 * Math.PI,
+		  color: colors, // pass a noop (function() {}) to decide color via css
+		  color2: (function(i){ return gender_col[i]; }),
+		  axisLine: true,
+		  axisText: true,
+		  circles: false,
+		  radius: 3,
+		  axisJoin: function(d, i) {
+		    return d.className || i;
+		  },
+		  transitionDuration: 300
+		});
+		cfg = chart.config();
+
+		var svg = d3.select('.graphwrap').append('svg')
+		  .attr('width', g.clientWidth)
+		  .attr('height', (parseInt(radardata.length/rowamt) * (parseInt(g.clientWidth/rowamt)-10)) + 2*cfg.h);
+
+		var game = svg.selectAll('g.game').data(radardata);
+
+		game.enter().append('g').classed('game', 1);
+		game.attr('transform', function(d, i) { return 'translate('+(i%rowamt * (cfg.w+10))+','+ (parseInt(i/rowamt)*(cfg.h)) +')'; })
+			.call(chart);
+
+		d3.selectAll('.legend').style('display', function(d, i) { return 'none'; });
+	});
+
+	/*
+	function load_small_mult(type){
+		if(type == "outpatients"){
+			$(".header span").html("Outpatient Diagnosis");
+		}else{
+			$(".header span").html("Inpatient Diagnosis");
+		}
+
+		d3.json("data/labels.json", function(error, json){
+			if(error){ return console.warn(error);}
+			//console.log(json);
+			labelinfo = json;
+
+			d3.json("data/l1decode.json", function(error,json){
+				if (error){ return console.warn(error); }
+				var l1_decode = json;
+
+				d3.json("data/diagnosisJSONfiles/diagnosis_" + type + ".json", function(error, json) {
+					if (error){ return console.warn(error); }
+					var dataset = json;
+					diagdata = dataset;
+					var all_codes = d3.keys(dataset);
+
+					d3.json("data/diagnosisXwalk.json", function(error, json){
+						if (error){ return console.warn(error); }
+						
+						var diag_lookup = json;
+
+						var l1_codes = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18];
+
+						d3.json("data/diagnosisJSONfiles/l1JSONfiles/l1code_" + type + ".json", function(error,json){
+							if (error){ return console.warn(error); }
+
+							var l1_info = json;
+
+							console.log(l1_info);
+
+							console.log(all_codes.length);
+							console.log(dataset);
+							//console.log(labelinfo);
+							//console.log(chronicdata);
+
+							var max_x = d3.max(all_codes, function(d) { return dataset[d]['uniques']/dataset['total_uniques']; });
+							var max_y = d3.max(all_codes, function(d) { return dataset[d]['total_cost']/dataset[d]['total_claims']; });
+
+							//Create scale functions
+							var xScale = d3.scale.pow().exponent(0.2)
+							.domain([0, max_x])
+							.range([p.left, w - p.left - p.right]);
+
+							var yScale = d3.scale.pow().exponent(1)
+							.domain([0, max_y])
+							.range([h - p.top, p.top]);
+
+							//Define X axis
+							var xAxis = d3.svg.axis()
+							.scale(xScale)
+							.orient("bottom")
+							.ticks(5);
+
+							//Define Y axis
+							var yAxis = d3.svg.axis()
+							.scale(yScale)
+							.orient("left")
+							.ticks(5);
+
+							var all_diag_cost = 0;
+							var all_diag_claims = 0;
+
+							var num_sm = 0;
+
+							//create small-mult
+							l1_codes.forEach(function(lc){
+							//lc = 1;
+
+								var small_mult = d3.select(".graphwrap").append("svg")
+								.classed("small_mult", true)
+								.attr("width", w)
+								.attr("height", h)
+								.on("mouseleave",function(){
+									d3.select(this).select(".sm_nodeinfo").text("");
+									d3.select(this).select(".sm_nodeinfo_ac").text("");
+									d3.select(this).select(".sm_nodeinfo_af").text("");
+								});
+
+								small_mult.append("text")
+								.attr("text-anchor","middle")
+								.attr("x",w/2)
+								.attr("y",20)
+								.attr("font-size","12")
+								.style("fill","#fff")
+								.text(function(){
+									if(l1_decode[lc].length >= 65){
+										return l1_decode[lc].substring(0, 60) + "...";
+									}else{
+										return l1_decode[lc];
+									}
+								});
+
+								small_mult.append("text")
+								.attr("text-anchor","end")
+								.attr("x",w-10)
+								.attr("y",60)
+								.attr("font-size","10")
+								.style("fill","rgb(230,230,230)")
+								.text("Avg. Freq.: " + (l1_info[lc]['unique_claims']/dataset['total_claims']).toFixed(6))
+
+								small_mult.append("text")
+								.attr("text-anchor","end")
+								.attr("x",w-10)
+								.attr("y",75)
+								.attr("font-size","10")
+								.style("fill","rgb(230,230,230)")
+								.text("Total Claims: " + l1_info[lc]['unique_claims'])
+
+								small_mult.append("text")
+								.attr("text-anchor","end")
+								.attr("x",w-10)
+								.attr("y",90)
+								.attr("font-size","10")
+								.style("fill","rgb(230,230,230)")
+								.text("Total Cost: $" + l1_info[lc]['total_cost'].toFixed(2))
+
+								small_mult.append("text")
+								.classed("sm_nodeinfo",true)
+								.attr("text-anchor","end")
+								.attr("x",w-10)
+								.attr("y",120)
+								.attr("font-size","10")
+								.style("fill","rgb(230,230,230)")
+								.text("")
+
+								small_mult.append("text")
+								.classed("sm_nodeinfo_ac",true)
+								.attr("text-anchor","end")
+								.attr("x",w-10)
+								.attr("y",135)
+								.attr("font-size","10")
+								.style("fill","rgb(230,230,230)")
+								.text("")
+
+								small_mult.append("text")
+								.classed("sm_nodeinfo_af",true)
+								.attr("text-anchor","end")
+								.attr("x",w-10)
+								.attr("y",150)
+								.attr("font-size","10")
+								.style("fill","rgb(230,230,230)")
+								.text("")
+
+								var avg_cost = l1_info[lc]['total_cost']/l1_info[lc]['total_claims'];
+
+								all_diag_cost += l1_info[lc]['total_cost'];
+								all_diag_claims += l1_info[lc]['total_claims'];
+
+								//Create circles
+								all_codes.forEach(function(d){
+									//HARD FILTERS
+									if(dataset[d]['uniques']/dataset['total_uniques'] > 0 && diag_lookup[d] != undefined){
+										//LOAD FILTERS
+										//$('#diagcontent').append('<input type="checkbox" name="' + d + '" checked>' + labelinfo['diagnosis'][d]['name'] + '<br>');
+
+										var code = d;
+
+										var l1_id = diag_lookup[code]['l1code'];
+
+										if(l1_codes.indexOf(l1_id) == -1){
+											l1_codes.push(l1_id);
+										}
+
+										var nodegroup = small_mult.append("g").classed("nodegroup",true)
+											.attr("l1_id",l1_id)
+											.on("mouseover",function(){
+												small_mult.select(".sm_nodeinfo").text(labelinfo['diagnosis'][code]['name']);
+												small_mult.select(".sm_nodeinfo_ac").text("Freq.: " + (dataset[code]['uniques']/dataset['total_uniques']).toFixed(6));
+												small_mult.select(".sm_nodeinfo_af").text("Avg. Claim Cost: $" + (dataset[code]['total_cost'] / dataset[code]['total_claims']).toFixed(2));
+											});
+
+										nodegroup.append("circle")
+										.attr("code",d)
+										.attr("cx",function(){
+											return xScale(dataset[d]['uniques']/dataset['total_uniques'])
+										})
+										.attr("cy",function(){
+											return yScale(dataset[d]['total_cost'] / dataset[d]['total_claims']);
+										})
+										.attr("r",radius)
+										.style("fill",function(){
+											if(l1_id == lc){
+												return cat_color[l1_id - 1];
+											}else{
+												return bg_color;
+											}
+										}) // 0 thru 17
+										.style("stroke",function(){
+											if(l1_id == lc){
+												return '#c8c8c8';
+											}else{
+												return bg_color;
+											}
+										});
+
+										nodegroup.append("text")
+										.html("Diagnosis: " + labelinfo['diagnosis'][code]['name'] + "<br />Frequency: " + (dataset[code]['uniques']/dataset['total_uniques']).toFixed(6) + "<br />Cost: $" + (dataset[code]['total_cost'] / dataset[code]['total_claims']).toFixed(2))
+										.attr("x", 20)
+										.attr("y", 20)
+										.style('display','none');
+									}
+								});
+
+								small_mult.selectAll('.nodegroup').each(function(){
+									var c = d3.select(this);
+									if(c.attr("l1_id") == lc){
+										c.moveToFront();
+									}
+								});
+
+								small_mult.append("line")
+								.attr("x1",xScale(0))
+								.attr("x2",xScale(max_x))
+								.attr("y1",yScale(avg_cost))
+								.attr("y2",yScale(avg_cost))
+								.style("stroke-width","1")
+								.style("stroke","rgb(255,0,0)");
+
+								small_mult.append("text")
+								.attr("text-anchor","end")
+								.attr("x",xScale(max_x))
+								.attr("y",yScale(avg_cost) - 5)
+								.attr("font-size","10")
+								.style("fill","rgb(255,0,0)")
+								.text("$" + avg_cost.toFixed(2));
+
+								//Create X axis
+								small_mult.append("g")
+								.attr("class", "x axis")
+								.attr("transform", "translate(0," + (h - p.top) + ")")
+								.call(xAxis);
+
+								//Create Y axis
+								small_mult.append("g")
+								.attr("class", "y axis")
+								.attr("transform", "translate(" + p.left + ",0)")
+								.call(yAxis);
+
+								//if(num_sm==0){
+									small_mult.append("text")
+									.classed("axistext",true)
+									.attr("x", w/2)
+									.attr("y", h-10)
+									.text("Frequency");
+
+									small_mult.append("text")
+									.classed("axistext",true)
+									.attr("transform", "rotate(-90)")
+									.attr("y",50)
+									.attr("x",-50)
+									.attr("dy", "1em")
+									.style("text-anchor", "end")
+									.text("Average Claim Cost ($)");
+							})
+							
+						var total_avg = all_diag_cost/all_diag_claims;
+
+						d3.selectAll(".small_mult").append("line")
+						.classed("total_avg",true)
+						.attr("x1",xScale(0))
+						.attr("x2",xScale(max_x))
+						.attr("y1",yScale(total_avg))
+						.attr("y2",yScale(total_avg))
+						.style("stroke-width","1")
+						.style("stroke","rgb(0,0,255)")
+						.style("display","none");
+
+							function zoom() {
+								svg.select(".x.axis").call(xAxis);
+					  			svg.select(".y.axis").call(yAxis);
+
+					  			svg.selectAll("circle")
+								.attr("cx", function() {
+									code = d3.select(this).attr("code");
+									return xScale(dataset[code]['uniques']/dataset['total_uniques']);
+								})
+								.attr("cy", function(){
+									code = d3.select(this).attr("code");
+									return yScale(dataset[code]['total_cost'] / dataset[code]['total_claims']);
+								});
+							}
+						});
+					});
+				});
+			});
+		});
+	}
+	*/
+    </script>
+  </body>
+</html>
