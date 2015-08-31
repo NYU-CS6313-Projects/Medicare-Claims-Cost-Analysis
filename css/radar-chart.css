@@ -41,7 +41,7 @@
 /* area transition when hovering */
 .radar-chart .area {
   stroke-width: 2;
-  fill-opacity: 0.5;
+  /*fill-opacity: 0.5;*/
 }
 .radar-chart.focus .area {
   fill-opacity: 0.1;
