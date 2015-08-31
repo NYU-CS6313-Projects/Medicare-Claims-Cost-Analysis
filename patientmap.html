@@ -120,6 +120,7 @@
 		var rowamt = 40;
 
 		var radardata = [];
+		var bgdata = [];
 		
 		var max_cost = d3.max(csvdata, function(d){ return parseFloat(d['info__claim_cost'])});
 		var min_cost = d3.min(csvdata, function(d){ return parseFloat(d['info__claim_cost'])});
@@ -132,6 +133,19 @@
 
 		csvdata.forEach(function(d){
 			var dict = {};
+			var bgdict = {};
+
+			bgdict.className = 'bg';
+			bgdict.axes = [{axis:"age", value: 1},
+							{axis:"cost", value: 1},
+							{axis:"claims", value: 1},
+							{axis:"claim_count", value: 1},
+							{axis:"total_LOS", value: 1},
+							//{axis:"dead", value: d['info__dead']}
+							];
+			bgdict.clust = 0;
+			bgdict.type = 'bg';	
+
 			dict.className = d['id'];
 			dict.axes = [{axis:"age", value: (parseFloat(d['ageYears'])/max_age)},
 						{axis:"cost", value: (parseFloat(d['info__claim_cost'])/max_cost)},
@@ -142,35 +156,41 @@
 						];
 			dict.clust = parseInt(d['clust']);
 			dict.cost = parseFloat(d['info__claim_cost']);
+			bgdict.cost = parseFloat(d['info__claim_cost']);
 			//dict.race = race_decode(d['info__race']);
 			//dict.gender = gender_decode(d['info__gender']);
 			//dict.score = (parseFloat(d['info__age'])/max_age) + (parseFloat(d['info__claim_cost'])/max_cost) + (parseFloat(d['info__num_claims'])/max_claims) + parseFloat(d['info__dead']);
 			radardata.push(dict);
-		})
+			bgdata.push(bgdict);
+		});
 
+		//data setup
 		radardata = radardata.sort(function(d1,d2){ return d3.ascending(d1.clust,d2.clust)});
 
 		console.log(radardata);
+		console.log(bgdata);
 		
 		var chart = RadarChart.chart();
 
 		var colors = d3.scale.linear()
     	//.base(Math.E)
-	    .domain([min_cost,avg_cost,max_cost])
-	    .range(["red","white","green"]);
+	    //.domain([min_cost,avg_cost,max_cost])
+	    //.range(["red","white","green"]);
+	   	.domain([min_cost,max_cost])
+	    .range(["rgb(255, 230, 230)","red"]);
 
 		chart.config({
 		  containerClass: 'radar-chart', // target with css, default stylesheet targets .radar-chart
 		  w: parseInt(g.clientWidth/rowamt) - 10,
-		  h: parseInt(g.clientWidth/rowamt) - 10,
+		  h: parseInt(g.clientWidth/rowamt) - 5,
 		  factor: 0.95,
 		  factorLegend: 1,
-		  levels: 2,
+		  levels: 1,
 		  maxValue: 1,
 		  radians: 2 * Math.PI,
 		  color: colors, // pass a noop (function() {}) to decide color via css
 		  color2: (function(i){ return gender_col[i]; }),
-		  axisLine: true,
+		  axisLine: false,
 		  axisText: true,
 		  circles: false,
 		  radius: 3,
@@ -185,13 +205,19 @@
 		  .attr('width', g.clientWidth)
 		  .attr('height', (parseInt(radardata.length/rowamt) * (parseInt(g.clientWidth/rowamt)-10)) + 2*cfg.h);
 
+		var bg = svg.selectAll('g.bg').data(bgdata);
+
+		bg.enter().append('g').classed('bg', 1);
+		bg.attr('transform', function(d, i) { return 'translate('+(i%rowamt * (cfg.w+10))+','+ (parseInt(i/rowamt)*(cfg.h)) +')'; })
+			.call(chart);
+
 		var game = svg.selectAll('g.game').data(radardata);
 
 		game.enter().append('g').classed('game', 1);
 		game.attr('transform', function(d, i) { return 'translate('+(i%rowamt * (cfg.w+10))+','+ (parseInt(i/rowamt)*(cfg.h)) +')'; })
 			.call(chart);
 
-		d3.selectAll('.legend').style('display', function(d, i) { return 'none'; });
+		d3.selectAll('.legend').style('display', function(d, i){return 'none';});
 	});
 
 	/*

@@ -206,22 +206,13 @@ var RadarChart = {
             axis.y = (cfg.h/2-radius2)+getVerticalPosition(i, radius2, (parseFloat(Math.max(axis.value, 0))/maxValue)*cfg.factor);
           });
         });
+
+        /*
+        //background polygon
         var polygon = container.selectAll(".area").data(data, cfg.axisJoin);
 
         polygon.enter().append('polygon')
-          .classed({area: 1, 'd3-enter': 1})
-          .on('mouseover', function (dd){
-            d3.event.stopPropagation();
-            container.classed('focus', 1);
-            d3.select(this).classed('focused', 1);
-            setTooltip(dd.className);
-          })
-          .on('mouseout', function(){
-            d3.event.stopPropagation();
-            container.classed('focus', 0);
-            d3.select(this).classed('focused', 0);
-            setTooltip(false);
-          });
+          .classed({area: 1, 'd3-enter': 1});
 
         polygon.exit()
           .classed('d3-exit', 1) // trigger css transition
@@ -239,7 +230,44 @@ var RadarChart = {
           })
           // styles should only be transitioned with css
           //.style('stroke', function(d, i) { return cfg.color2(d.gender); })
-          .style('fill', function(d, i) { return cfg.color(d.cost); })
+          .style('fill', '#fff');        
+        */
+
+        var polygon = container.selectAll(".area").data(data, cfg.axisJoin);
+
+        polygon.enter().append('polygon')
+          .classed({area: 1, 'd3-enter': 1});
+          /*.on('mouseover', function (dd){
+            d3.event.stopPropagation();
+            container.classed('focus', 1);
+            d3.select(this).classed('focused', 1);
+            setTooltip(dd.className);
+          })
+          .on('mouseout', function(){
+            d3.event.stopPropagation();
+            container.classed('focus', 0);
+            d3.select(this).classed('focused', 0);
+            setTooltip(false);
+          });*/
+
+        polygon.exit()
+          .classed('d3-exit', 1); // trigger css transition
+          /*.transition().duration(cfg.transitionDuration)
+            .remove();*/
+
+        polygon
+          .each(function(d, i) {
+            var classed = {'d3-exit': 0}; // if exiting element is being reused
+            classed['radar-chart-serie' + i] = 1;
+            if(d.className) {
+              classed[d.className] = 1;
+            }
+            d3.select(this).classed(classed);
+          })
+          // styles should only be transitioned with css
+          .style('stroke', function(d, i) { if(d.type == 'bg'){return cfg.color(d.cost); }})
+          .style('stroke-width', '4px')
+          .style('fill', function(d, i) { if(d.type == 'bg'){return '#888';}else{return '#000';}})
           .transition().duration(cfg.transitionDuration)
             // svg attrs with js
             .attr('points',function(d) {
